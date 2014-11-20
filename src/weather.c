@@ -10,13 +10,25 @@ static BitmapLayer *icon_layer;
 static GBitmap *icon_bitmap = NULL;
 
 static AppSync sync;
-static uint8_t sync_buffer[64];
+static uint8_t sync_buffer[512];
 
 enum WeatherKey {
   WEATHER_ICON_KEY = 0x0,         // TUPLE_INT
   WEATHER_TEMPERATURE_KEY = 0x1,  // TUPLE_CSTRING
   WEATHER_CITY_KEY = 0x2,         // TUPLE_CSTRING
 };
+
+enum TRIP_KEYS {
+  REQ_BUS_NB = 0,     // TUPLE_INT bus #
+  REQ_STOP_NB,      // TUPLE_INT stop #
+ 	TRIP_ARRIVAL,     // TUPLE_INT eta
+  TRIP_ORIGIN,      // TUPLE_CSTRING stop name
+  TRIP_DESTINATION, // TUPLE_CSTRING 
+  TRIP_DIRECTION,   // TUPLE_CSTRING 
+};
+
+
+
 
 static const uint32_t WEATHER_ICONS[] = {
   RESOURCE_ID_IMAGE_SUN, //0
@@ -86,6 +98,18 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(city_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(city_layer));
 
+Tuplet bus_values[] = {
+    TupletInteger(REQ_BUS_NB, 96),
+    TupletInteger(REQ_STOP_NB, 3011),
+    TupletInteger(TRIP_ARRIVAL, -1),
+    TupletCString(TRIP_ORIGIN, "                          "),
+    TupletCString(TRIP_DESTINATION, "                          "),
+    TupletCString(TRIP_DIRECTION, "                          "),
+  };
+
+
+
+
   Tuplet initial_values[] = {
     TupletInteger(WEATHER_ICON_KEY, (uint8_t) 1),
     TupletCString(WEATHER_TEMPERATURE_KEY, "1234\u00B0C"),
@@ -110,6 +134,20 @@ static void window_unload(Window *window) {
   bitmap_layer_destroy(icon_layer);
 }
 
+
+void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+  Window *window = (Window *)context;
+	window_stack_push((Window*)wind_bus_sel, true);
+}
+
+void config_provider(Window *window) {
+ // single click / repeat-on-hold config:
+  window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, down_single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, down_single_click_handler);
+
+}
+
 static void init(void) {
   window = window_create();
   window_set_background_color(window, GColorBlack);
@@ -118,6 +156,8 @@ static void init(void) {
     .load = window_load,
     .unload = window_unload
   });
+
+  window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
 
   wind_bus_sel = number_window_create("Bus #",  (NumberWindowCallbacks) {.selected = NULL}, NULL);
   number_window_set_step_size(wind_bus_sel, 1);
