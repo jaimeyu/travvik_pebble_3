@@ -52,6 +52,7 @@ function fetch_next_bus(route, station, direction) {
       // No error detector, save the values.
       localStorage.setItem("last_station", station);
       localStorage.setItem("last_route", route);
+      localStorage.setItem("last_direction", direction);
       console.log("Sent data to pebble");
     }
   } 
