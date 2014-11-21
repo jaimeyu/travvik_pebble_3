@@ -1,88 +1,63 @@
+function parseTravvikData(response, route, station, direction){
+  var stop_eta = null, route_destination = null, stop_name = null;
 
-function iconFromWeatherId(weatherId) {
-  if (weatherId < 600) {
-    return 2;
-  } else if (weatherId < 700) {
-    return 3;
-  } else if (weatherId > 800) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-function fetch_next_bus(route, station, direction) {
-console.log("Fecthing transit");
-//var direction=0, route=96, station=3011
-  var response;
-    var req = new XMLHttpRequest();
-    console.log("Fetching transit data for " + route, station);
-    console.log("http://ottawa.travvik.com/beta/pebble.php?" +
-            "routeno=" + route + "&stopno=" + station + "&src=pebble");
-    req.open('GET', "http://ottawa.travvik.com/beta/pebble.php?" +
-            "routeno=" + route + "&stopno=" + station + "&src=pebble", true);
-    req.onload = function(e) {
-        if (req.readyState === 4) {
-            if (req.status === 200) {
-                //console.log(escape(req.responseText));
-                response = JSON.parse(req.responseText);
-                var number, stopLabel, destination, arrival;
-                    console.log("***SUCCESS in getting data!");
-                    var arrival0 = null, dst0 = null, stoplabel = null;
-
-                    console.log("Executing direction: " + direction);
-                    /*{"station":"TUNNEY PASTURE","route":"97","arrival0":"14","destination0":"Airport \/ A\u00e9roport","arrival1":"2","destination1":"Bayshore"}*/
+  console.log("Parsing downloaded data for:" + JSON.stringify(direction));
+  /*{"station":"TUNNEY PASTURE","route":"97","stop_eta":"14","destination0":"Airport \/ A\u00e9roport","arrival1":"2","destination1":"Bayshore"}*/
   try {
-    //arrival0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection.Trips.Trip[0].AdjustedScheduleTime;
-    //dst0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection.Trips.Trip[0].TripDestination;
-    arrival0 = response.arrival0
-    dst0 = response.destination0;
-    stoplabel = response.station;
-
+    stop_name = response.station;
+    if (response.route === -1){
+      stop_eta = -1;
+      route_destination = "Sry. No data found:(";
+      stop_name = "T.T";
+    }
+    else if (direction === 0 || response.arrival1 === null){
+      stop_eta = response.arrival0;
+      route_destination = response.destination0;
+    }
+    else {
+      stop_eta = response.arrival1;
+      route_destination = response.destination1;
+    }
   }
   catch (e) {
-    console.log(e);
+    console.log("Something went wrong trying to parse data:" + JSON.stringify(e));
   }
 
-if (arrival0 === null) {
-  console.log("FAIL arrival");
+  //console.log(escape("Arrival of " + route + " from " + stop_name + "to " + route_destination + " in " + stop_eta + " mins."));
+
   Pebble.sendAppMessage({
-    "REQ_BUS_NB" : -1,    
-    "REQ_STOP_NB" : -1,   
-    "TRIP_ARRIVAL" : -5,  
-    "TRIP_DESTINATION" : "No route found"
+    "REQ_BUS_NB" : parseInt(route),    
+    "REQ_STOP_NB" : parseInt(station),   
+    "TRIP_ARRIVAL" : parseInt(stop_eta),  
+    "TRIP_DESTINATION" : route_destination
   });
 
-  return;
 }
-//console.log(escape("Arrival of " + route + " from " + stoplabel + "to " + dst0 + " in " + arrival0 + " mins."));
 
-Pebble.sendAppMessage({
-  "REQ_BUS_NB" : parseInt(route),    
-  "REQ_STOP_NB" : parseInt(station),   
-  "TRIP_ARRIVAL" : parseInt(arrival0),  
-  "TRIP_DESTINATION" : dst0
-});
-// No error detector, save the values.
-localStorage.setItem("lastStop", station);
-localStorage.setItem("lastBus", route);
-console.log("Sent data to pebble");
-}
-} else {
-  console.log("Error");
-}
+
+function fetch_next_bus(route, station, direction) {
+  var response;
+  var req = new XMLHttpRequest();
+  req.open('GET', "http://ottawa.travvik.com/beta/pebble.php?" +
+      "routeno=" + route + "&stopno=" + station + "&src=pebble", true);
+  req.onload = function(e) {
+  if (req.readyState === 4) {
+    if (req.status === 200) {
+      // Caution, unicode errors may happen because of accent e.
+      console.log(escape(req.responseText));
+      response = JSON.parse(req.responseText);
+      
+      parseTravvikData(response, route, station, direction);
+
+      // No error detector, save the values.
+      localStorage.setItem("last_station", station);
+      localStorage.setItem("last_route", route);
+      console.log("Sent data to pebble");
+    }
+  } 
 };
 req.send(null);
 
-/* 
-   Pebble.sendAppMessage({
-   "REQ_BUS_NB" : 97,    
-   "REQ_STOP_NB" : 3011,   
-   "TRIP_ARRIVAL" : 5,  
-   "TRIP_DESTINATION" : "Bayshore"
-   });
-   console.log("Sent the messasge to pebble");
-   */
 }
 
 
@@ -90,18 +65,26 @@ Pebble.addEventListener("ready",
     function(e) {
       console.log("connect!" + e.ready);
       console.log(e.type);
+      
+      // Boot up, fetch old data, send it down!
+      last_station = localStorage.getItem("last_station");
+      last_route =   localStorage.getItem("last_route");
+      last_direction = localStorage.getItem("last_direction");
+      if ( last_station === null || last_route === null || last_direction === null) {
+        last_station = 3011;
+        last_route = 97;
+        last_direction = 0;
+      }
+      fetch_next_bus(last_route, last_station, last_direction);
+
     });
 
 Pebble.addEventListener("appmessage",
     function(e) {
       console.log(e.type);
-      console.log(JSON.stringify(e.payload));
-      console.log(e.payload.TRIP_ARRIVAL);
-      console.log(e.payload.TRIP_DESTINATION);
-      console.log(e.payload.REQ_BUS_NB);
-      console.log(e.payload.REQ_STOP_NB);
-      console.log("message!");
-      fetch_next_bus(e.payload.REQ_BUS_NB,e.payload.REQ_STOP_NB, 0);
+      console.log("rcvd msg frm pbl");
+      fetch_next_bus( e.payload.REQ_BUS_NB, 
+                      e.payload.REQ_STOP_NB, 0);
     });
 
 Pebble.addEventListener("webviewclosed",

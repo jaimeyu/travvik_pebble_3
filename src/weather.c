@@ -51,23 +51,23 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 
   switch (key) {
     case REQ_BUS_NB:
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,nb,10);
       text_layer_set_text(temperature_layer, nb);
       break;
     case REQ_STOP_NB:
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,sb,10);
       text_layer_set_text(city_layer, sb);
       break;
     case TRIP_ARRIVAL:
 
       itoa((int)new_tuple->value->int32,ab,10);
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
       //text_layer_set_text(arrival_layer, ab);
       break;
     case TRIP_DESTINATION:
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:%s", new_tuple->value->cstring);
+    //  APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:%s", new_tuple->value->cstring);
       text_layer_set_text(arrival_layer, new_tuple->value->cstring);
       break;
     default:
