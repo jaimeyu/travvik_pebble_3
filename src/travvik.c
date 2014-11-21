@@ -4,9 +4,11 @@ static Window *window;
 static NumberWindow *wind_bus_sel;
 static NumberWindow *wind_stop_sel;
 
-static TextLayer *temperature_layer;
-static TextLayer *city_layer;
-static TextLayer *arrival_layer;
+static TextLayer *layer_destination;
+static TextLayer *layer_route;
+static TextLayer *layer_eta;
+static TextLayer *layer_station;
+static TextLayer *layer_station_str;
 //static BitmapLayer *icon_layer;
 static GBitmap *icon_bitmap = NULL;
 
@@ -46,35 +48,34 @@ sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tu
     case KEY_ROUTE:
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,nb,10);
-      text_layer_set_text(temperature_layer, nb);
+      text_layer_set_text(layer_route, nb);
       break;
     case KEY_STOP_NUM:
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,sb,10);
-      text_layer_set_text(city_layer, sb);
+      text_layer_set_text(layer_station, sb);
       break;
     case KEY_ETA:
-
       itoa((int)new_tuple->value->int32,ab,10);
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
-      //text_layer_set_text(arrival_layer, ab);
+      text_layer_set_text(layer_eta, ab);
       break;
     case KEY_DST:
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:");
-      text_layer_set_text(arrival_layer, new_tuple->value->cstring);
+      text_layer_set_text(layer_destination, new_tuple->value->cstring);
       // make it unbusy.
       busy = 0;
       break;
     case KEY_DIRECTION:
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: direction:");
-//      text_layer_set_text(arrival_layer, new_tuple->value->cstring);
+//      text_layer_set_text(layer_eta, new_tuple->value->cstring);
       // make it unbusy.
       busy = 0;
       break;
  
     case KEY_STATION_STR:
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: station name:");
-//      text_layer_set_text(arrival_layer, new_tuple->value->cstring);
+      text_layer_set_text(layer_station_str, new_tuple->value->cstring);
       // make it unbusy.
       busy = 0;
       break;
@@ -122,40 +123,66 @@ static void send_cmd(void) {
 }
 
 static void window_load(Window *window) {
+/*
+What the output needs to look like
+
+       route# Destination
+
+           ETA
+       station(#)
+
+
+
+*/
+
+
   Layer *window_layer = window_get_root_layer(window);
 
-  //icon_layer = bitmap_layer_create(GRect(32, 10, 80, 80));
-  //layer_add_child(window_layer, bitmap_layer_get_layer(icon_layer));
+  layer_route = text_layer_create(GRect(0, 0, 30, 30));
+  text_layer_set_text_color(layer_route, GColorWhite);
+  text_layer_set_background_color(layer_route, GColorClear);
+  text_layer_set_font(layer_route, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_text_alignment(layer_route, GTextAlignmentLeft);
+  layer_add_child(window_layer, text_layer_get_layer(layer_route));
 
-  temperature_layer = text_layer_create(GRect(0, 95, 144, 68));
-  text_layer_set_text_color(temperature_layer, GColorWhite);
-  text_layer_set_background_color(temperature_layer, GColorClear);
-  text_layer_set_font(temperature_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-  text_layer_set_text_alignment(temperature_layer, GTextAlignmentCenter);
-  layer_add_child(window_layer, text_layer_get_layer(temperature_layer));
+  layer_destination = text_layer_create(GRect(35, 0, 144, 30));
+  text_layer_set_text_color(layer_destination, GColorBlack);
+  text_layer_set_background_color(layer_destination, GColorWhite);
+  text_layer_set_font(layer_destination, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_text_alignment(layer_destination, GTextAlignmentLeft);
+  text_layer_set_overflow_mode (layer_destination, GTextOverflowModeFill);
+  layer_add_child(window_layer, text_layer_get_layer(layer_destination));
 
-  city_layer = text_layer_create(GRect(0, 125, 144, 68));
-  text_layer_set_text_color(city_layer, GColorWhite);
-  text_layer_set_background_color(city_layer, GColorClear);
-  text_layer_set_font(city_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-  text_layer_set_text_alignment(city_layer, GTextAlignmentCenter);
-  layer_add_child(window_layer, text_layer_get_layer(city_layer));
+  layer_eta = text_layer_create(GRect(0, 50 , 144, 68));
+  text_layer_set_text_color(layer_eta, GColorWhite);
+  text_layer_set_background_color(layer_eta, GColorClear);
+  text_layer_set_font(layer_eta, fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49));
+  text_layer_set_text_alignment(layer_eta, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(layer_eta));
 
-  arrival_layer = text_layer_create(GRect(0, 25, 144, 68));
-  text_layer_set_text_color(arrival_layer, GColorWhite);
-  text_layer_set_background_color(arrival_layer, GColorClear);
-  text_layer_set_font(arrival_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-  text_layer_set_text_alignment(arrival_layer, GTextAlignmentCenter);
-  layer_add_child(window_layer, text_layer_get_layer(arrival_layer));
+  layer_station = text_layer_create(GRect(0, 100, 144, 68));
+  text_layer_set_text_color(layer_station, GColorWhite);
+  text_layer_set_background_color(layer_station, GColorClear);
+  text_layer_set_font(layer_station, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_text_alignment(layer_station, GTextAlignmentLeft);
+  layer_add_child(window_layer, text_layer_get_layer(layer_station));
+
+  layer_station_str = text_layer_create(GRect(0, 130, 144, 68));
+  text_layer_set_text_color(layer_station_str, GColorBlack);
+  text_layer_set_background_color(layer_station_str, GColorWhite);
+  text_layer_set_font(layer_station_str, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_text_alignment(layer_station_str, GTextAlignmentLeft);
+  layer_add_child(window_layer, text_layer_get_layer(layer_station_str));
+
 
 
 
   Tuplet bus_values[] = {
-    TupletInteger(KEY_ROUTE, 96),
-    TupletInteger(KEY_STOP_NUM, 3011),
+    TupletInteger(KEY_ROUTE, -1),
+    TupletInteger(KEY_STOP_NUM, -1),
     TupletInteger(KEY_ETA, -1),
-    TupletCString(KEY_DST, "                 "),
-    TupletCString(KEY_STATION_STR, "         "),
+    TupletCString(KEY_DST, "  bootup         "),
+    TupletCString(KEY_STATION_STR, " none     "),
     TupletInteger(KEY_DIRECTION, 0),
   };
 
@@ -175,9 +202,11 @@ static void window_unload(Window *window) {
     gbitmap_destroy(icon_bitmap);
   }
 
-  text_layer_destroy(city_layer);
-  text_layer_destroy(arrival_layer);
-  text_layer_destroy(temperature_layer);
+  text_layer_destroy(layer_route);
+  text_layer_destroy(layer_eta);
+  text_layer_destroy(layer_destination);
+  text_layer_destroy(layer_station);
+  text_layer_destroy(layer_station_str);
   //  bitmap_layer_destroy(icon_layer);
 }
 
