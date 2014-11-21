@@ -11,85 +11,56 @@ function iconFromWeatherId(weatherId) {
   }
 }
 
-function fetchWeather() {
+function fetch_next_bus(route, station, direction) {
 console.log("Fecthing transit");
-var direction=0, route=96, station=3011
+//var direction=0, route=96, station=3011
   var response;
     var req = new XMLHttpRequest();
     console.log("Fetching transit data for " + route, station);
-    console.log("http://ottawa.travvik.com/json.php?" +
+    console.log("http://ottawa.travvik.com/beta/pebble.php?" +
             "routeno=" + route + "&stopno=" + station + "&src=pebble");
-    req.open('GET', "http://ottawa.travvik.com/json.php?" +
+    req.open('GET', "http://ottawa.travvik.com/beta/pebble.php?" +
             "routeno=" + route + "&stopno=" + station + "&src=pebble", true);
     req.onload = function(e) {
         if (req.readyState === 4) {
             if (req.status === 200) {
-                //console.log(req.responseText);
+                //console.log(escape(req.responseText));
                 response = JSON.parse(req.responseText);
-                var temperature, icon, city;
                 var number, stopLabel, destination, arrival;
                     console.log("***SUCCESS in getting data!");
                     var arrival0 = null, dst0 = null, stoplabel = null;
 
                     console.log("Executing direction: " + direction);
-try{
-  arrival0 =  response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection[direction].Trips.Trip.AdjustedScheduleTime;
-  dst0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection[direction].Trips.Trip.TripDestination;
-}catch(e){
-  console.log("Failed to get data");
-  }
+                    /*{"station":"TUNNEY PASTURE","route":"97","arrival0":"14","destination0":"Airport \/ A\u00e9roport","arrival1":"2","destination1":"Bayshore"}*/
   try {
-    arrival0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection[direction].Trips.Trip.AdjustedScheduleTime;
-    dst0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection[direction].Trips.Trip.TripDestination;
+    //arrival0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection.Trips.Trip[0].AdjustedScheduleTime;
+    //dst0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection.Trips.Trip[0].TripDestination;
+    arrival0 = response.arrival0
+    dst0 = response.destination0;
+    stoplabel = response.station;
+
   }
   catch (e) {
     console.log(e);
   }
 
-  try {
-    arrival0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection.Trips.Trip.AdjustedScheduleTime;
-    dst0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection.Trips.Trip.TripDestination;
-  }
-  catch (e) {
-    console.log(e);
-  }
-
-  try {
-    arrival0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection[direction].Trips.Trip[0].AdjustedScheduleTime;
-    dst0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection[direction].Trips.Trip[0].TripDestination;
-  }
-  catch (e) {
-    console.log(e);
-  }
-
-  try {
-    arrival0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection.Trips.Trip[0].AdjustedScheduleTime;
-    dst0 = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.Route.RouteDirection.Trips.Trip[0].TripDestination;
-  }
-  catch (e) {
-    console.log(e);
-  }
 if (arrival0 === null) {
   console.log("FAIL arrival");
   Pebble.sendAppMessage({
-    "REQ_BUS_NB" : 97,    
-    "REQ_STOP_NB" : 3011,   
+    "REQ_BUS_NB" : -1,    
+    "REQ_STOP_NB" : -1,   
     "TRIP_ARRIVAL" : -5,  
-    "TRIP_DESTINATION" : "FAIL NULLED"
+    "TRIP_DESTINATION" : "No route found"
   });
 
   return;
 }
-console.log("Arrival in " + arrival0);
-console.log("Arrival in " + parseInt(arrival0, 10));
-
-stoplabel = response.GetNextTripsForStopResponse.GetNextTripsForStopResult.StopLabel;
-
+//console.log(escape("Arrival of " + route + " from " + stoplabel + "to " + dst0 + " in " + arrival0 + " mins."));
 
 Pebble.sendAppMessage({
-  "REQ_BUS_NB" : 97,    
-  "REQ_STOP_NB" : 3011,   
-  "TRIP_ARRIVAL" : arrival0,  
+  "REQ_BUS_NB" : parseInt(route),    
+  "REQ_STOP_NB" : parseInt(station),   
+  "TRIP_ARRIVAL" : parseInt(arrival0),  
   "TRIP_DESTINATION" : dst0
 });
 // No error detector, save the values.
@@ -130,7 +101,7 @@ Pebble.addEventListener("appmessage",
       console.log(e.payload.REQ_BUS_NB);
       console.log(e.payload.REQ_STOP_NB);
       console.log("message!");
-      fetchWeather();
+      fetch_next_bus(e.payload.REQ_BUS_NB,e.payload.REQ_STOP_NB, 0);
     });
 
 Pebble.addEventListener("webviewclosed",
