@@ -94,7 +94,18 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 }
 
 static void send_cmd(void) {
-  Tuplet value = TupletInteger(1, 1);
+/*
+Tuplet bus_values[] = {
+    TupletInteger(REQ_BUS_NB, 96),
+    TupletInteger(REQ_STOP_NB, 3011),
+    TupletInteger(TRIP_ARRIVAL, -1),
+    TupletCString(TRIP_DESTINATION, "                "),
+  };
+*/
+  Tuplet value = TupletInteger(REQ_BUS_NB, 95);
+  Tuplet stopnb = TupletInteger(REQ_STOP_NB, 3011);
+  Tuplet arrival = TupletInteger(TRIP_ARRIVAL, -1);
+  Tuplet dst = TupletCString(TRIP_DESTINATION, "Loading");
 
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
@@ -104,6 +115,9 @@ static void send_cmd(void) {
   }
 
   dict_write_tuplet(iter, &value);
+  dict_write_tuplet(iter, &stopnb);
+  dict_write_tuplet(iter, &arrival);
+  dict_write_tuplet(iter, &dst);
   dict_write_end(iter);
 
   app_message_outbox_send();
