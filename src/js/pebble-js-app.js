@@ -24,7 +24,7 @@ function parseTravvikData(response, route, station, direction){
     console.log("Something went wrong trying to parse data:" + JSON.stringify(e));
   }
 
-  //console.log(escape("Arrival of " + route + " from " + stop_name + "to " + route_destination + " in " + stop_eta + " mins."));
+  console.log(("Arrival of " + route + " from " + stop_name + "to " + route_destination + " in " + stop_eta + " mins."));
 
   Pebble.sendAppMessage({
     "KEY_ROUTE" : parseInt(route),    
@@ -56,13 +56,18 @@ function parseTravvikData(response, route, station, direction){
 function fetch_next_bus(route, station, direction) {
   var response;
   var req = new XMLHttpRequest();
-  req.open('GET', "http://ottawa.travvik.com/beta/pebble.php?" +
-      "routeno=" + route + "&stopno=" + station + "&src=pebble", true);
+  var uri = "http://ottawa.travvik.com/beta/pebble.php?" +
+      "routeno=" + route + "&stopno=" + station + "&src=pebble";
+
+  console.log("Fetching from:" + uri);
+      
+  req.open('GET', uri , true);
   req.onload = function(e) {
   if (req.readyState === 4) {
     if (req.status === 200) {
       // Caution, unicode errors may happen because of accent e.
-      console.log(escape(req.responseText));
+      //console.log(escape(req.responseText));
+      console.log(req.responseText);
       response = JSON.parse(req.responseText);
       
       parseTravvikData(response, route, station, direction);
@@ -101,7 +106,8 @@ Pebble.addEventListener("appmessage",
       console.log(e.type);
       console.log("rcvd msg frm pbl");
       fetch_next_bus( e.payload.KEY_ROUTE, 
-                      e.payload.KEY_STOP_NUM, 0);
+                      e.payload.KEY_STOP_NUM,
+                      e.payload.KEY_DIRECTION);
     });
 
 Pebble.addEventListener("webviewclosed",
