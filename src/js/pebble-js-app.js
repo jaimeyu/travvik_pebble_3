@@ -26,10 +26,10 @@ function parseTravvikData(response, route, station, direction){
   //console.log(escape("Arrival of " + route + " from " + stop_name + "to " + route_destination + " in " + stop_eta + " mins."));
 
   Pebble.sendAppMessage({
-    "REQ_BUS_NB" : parseInt(route),    
-    "REQ_STOP_NB" : parseInt(station),   
-    "TRIP_ARRIVAL" : parseInt(stop_eta),  
-    "TRIP_DESTINATION" : route_destination
+    "KEY_ROUTE" : parseInt(route),    
+    "KEY_STOP_NUM" : parseInt(station),   
+    "KEY_ETA" : parseInt(stop_eta),  
+    "KEY_DST" : route_destination
   });
 
 }
@@ -84,8 +84,8 @@ Pebble.addEventListener("appmessage",
     function(e) {
       console.log(e.type);
       console.log("rcvd msg frm pbl");
-      fetch_next_bus( e.payload.REQ_BUS_NB, 
-                      e.payload.REQ_STOP_NB, 0);
+      fetch_next_bus( e.payload.KEY_ROUTE, 
+                      e.payload.KEY_STOP_NUM, 0);
     });
 
 Pebble.addEventListener("webviewclosed",

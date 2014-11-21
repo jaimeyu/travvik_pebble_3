@@ -20,10 +20,10 @@ enum WeatherKey {
 };
 
 enum TRIP_KEYS {
-  REQ_BUS_NB = 0,     // TUPLE_INT bus #
-  REQ_STOP_NB = 1,      // TUPLE_INT stop #
-  TRIP_ARRIVAL = 2,      // TUPLE_CSTRING stop name
-  TRIP_DESTINATION = 3, // TUPLE_CSTRING
+  KEY_ROUTE = 0,     // TUPLE_INT bus #
+  KEY_STOP_NUM = 1,      // TUPLE_INT stop #
+  KEY_ETA = 2,      // TUPLE_CSTRING stop name
+  KEY_DST = 3, // TUPLE_CSTRING
 };
 
 
@@ -50,23 +50,23 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
   //itoa((int)new_tuple->value,nb,15);
 
   switch (key) {
-    case REQ_BUS_NB:
+    case KEY_ROUTE:
       //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,nb,10);
       text_layer_set_text(temperature_layer, nb);
       break;
-    case REQ_STOP_NB:
+    case KEY_STOP_NUM:
       //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,sb,10);
       text_layer_set_text(city_layer, sb);
       break;
-    case TRIP_ARRIVAL:
+    case KEY_ETA:
 
       itoa((int)new_tuple->value->int32,ab,10);
       //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
       //text_layer_set_text(arrival_layer, ab);
       break;
-    case TRIP_DESTINATION:
+    case KEY_DST:
     //  APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:%s", new_tuple->value->cstring);
       text_layer_set_text(arrival_layer, new_tuple->value->cstring);
       break;
@@ -96,22 +96,22 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 static void send_cmd(void) {
   /*
      Tuplet bus_values[] = {
-     TupletInteger(REQ_BUS_NB, 96),
-     TupletInteger(REQ_STOP_NB, 3011),
-     TupletInteger(TRIP_ARRIVAL, -1),
-     TupletCString(TRIP_DESTINATION, "                "),
+     TupletInteger(KEY_ROUTE, 96),
+     TupletInteger(KEY_STOP_NUM, 3011),
+     TupletInteger(KEY_ETA, -1),
+     TupletCString(KEY_DST, "                "),
      };
      */
-  Tuplet value =    TupletInteger(REQ_BUS_NB, 95);
-  Tuplet stopnb =   TupletInteger(REQ_STOP_NB, 3011);
-  Tuplet arrival =  TupletInteger(TRIP_ARRIVAL, -1);
-  Tuplet dst =      TupletCString(TRIP_DESTINATION, "Loading");
+  Tuplet value =    TupletInteger(KEY_ROUTE, 95);
+  Tuplet stopnb =   TupletInteger(KEY_STOP_NUM, 3011);
+  Tuplet arrival =  TupletInteger(KEY_ETA, -1);
+  Tuplet dst =      TupletCString(KEY_DST, "Loading");
 /*
   Tuplet pairs[] = {
-    TupletInteger(REQ_BUS_NB, 95),
-    TupletInteger(REQ_STOP_NB, 3011),
-    TupletInteger(TRIP_ARRIVAL, -1),  
-    TupletCString(TRIP_DESTINATION, "Loading"),
+    TupletInteger(KEY_ROUTE, 95),
+    TupletInteger(KEY_STOP_NUM, 3011),
+    TupletInteger(KEY_ETA, -1),  
+    TupletCString(KEY_DST, "Loading"),
   };
   uint8_t buffer[256];
   uint32_t size = sizeof(buffer);
@@ -170,10 +170,10 @@ static void window_load(Window *window) {
 
 
   Tuplet bus_values[] = {
-    TupletInteger(REQ_BUS_NB, 96),
-    TupletInteger(REQ_STOP_NB, 3011),
-    TupletInteger(TRIP_ARRIVAL, -1),
-    TupletCString(TRIP_DESTINATION, "                "),
+    TupletInteger(KEY_ROUTE, 96),
+    TupletInteger(KEY_STOP_NUM, 3011),
+    TupletInteger(KEY_ETA, -1),
+    TupletCString(KEY_DST, "                "),
   };
   /*
      Tuplet initial_values[] = {

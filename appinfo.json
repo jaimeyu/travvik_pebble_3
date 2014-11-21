@@ -9,10 +9,10 @@
     "watchface": false
   },
   "appKeys": {
-    "REQ_BUS_NB":0,
-    "REQ_STOP_NB":1,
-    "TRIP_ARRIVAL":2,
-    "TRIP_DESTINATION":3,
+    "KEY_ROUTE":0,
+    "KEY_STOP_NUM":1,
+    "KEY_ETA":2,
+    "KEY_DST":3,
     "KEY_STATION_STR":4,
     "KEY_DIRECTION": 5
   },
