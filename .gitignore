@@ -2,4 +2,4 @@ build/*
 *.o
 *swp
 *pyc
-
+.lock-waf_linux2_build
