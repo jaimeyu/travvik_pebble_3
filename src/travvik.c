@@ -17,8 +17,10 @@ static AppSync sync;
 static uint8_t sync_buffer[128];
 
 static volatile uint8_t direction = 0;
-static volatile uint32_t route = 96;
-static volatile uint32_t stop = 3011;
+static volatile uint32_t route = 0;
+static volatile uint32_t stop = 0;
+static volatile int32_t eta = 0;
+static volatile int32_t refresh_count = 3;
 static volatile uint8_t busy = 0;
 
 enum TRIP_KEYS {
@@ -32,6 +34,8 @@ enum TRIP_KEYS {
 
 static int 
 itoa(int value, char *sp, int radix);
+
+static void send_cmd(void);
 
 static void 
 sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
@@ -59,6 +63,7 @@ sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tu
       number_window_set_value(wind_stop_sel, (int)new_tuple->value->int32);
       break;
     case KEY_ETA:
+      eta = new_tuple->value->int32;
       itoa((int)new_tuple->value->int32,ab,10);
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
       text_layer_set_text(layer_eta, ab);
@@ -86,6 +91,26 @@ sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tu
     default:
       break;
   }
+}
+
+void decrement_eta_handler(void *data){
+  static char ab[16];
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Decrementing eta");
+  if (--refresh_count >= 0){
+    eta--;
+    if (eta >= 0){
+      itoa(eta,ab,10);
+      text_layer_set_text(layer_eta, ab);
+    }
+    else {
+      send_cmd();
+    }
+  }
+  else{
+    send_cmd();
+    refresh_count = 3;
+  }
+  app_timer_register(1000*60, decrement_eta_handler, NULL);
 }
 
 static void send_cmd(void) {
@@ -203,6 +228,8 @@ What the output needs to look like
     app_message_open(inbound_size, outbound_size);
     app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), bus_values, ARRAY_LENGTH(bus_values),
     sync_tuple_changed_callback, sync_error_callback, NULL);
+
+    app_timer_register(1000*60, decrement_eta_handler, NULL);
 
   //send_cmd();
 }
