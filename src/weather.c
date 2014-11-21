@@ -23,7 +23,7 @@ enum TRIP_KEYS {
   REQ_BUS_NB = 0,     // TUPLE_INT bus #
   REQ_STOP_NB = 1,      // TUPLE_INT stop #
   TRIP_ARRIVAL = 2,      // TUPLE_CSTRING stop name
-  TRIP_DESTINATION = 3, // TUPLE_CSTRING 
+  TRIP_DESTINATION = 3, // TUPLE_CSTRING
 };
 
 
@@ -36,7 +36,7 @@ static const uint32_t WEATHER_ICONS[] = {
   RESOURCE_ID_IMAGE_SNOW //3
 };
 
-static 
+static
 int itoa(int value, char *sp, int radix);
 
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
@@ -50,58 +50,58 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
   //itoa((int)new_tuple->value,nb,15);
 
   switch (key) {
-		case REQ_BUS_NB:
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
-            itoa((int)new_tuple->value->int32,nb,10);
-      			text_layer_set_text(temperature_layer, nb);
-			break;
-        case REQ_STOP_NB:
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
-            itoa((int)new_tuple->value->int32,sb,10);
-            text_layer_set_text(city_layer, sb);
-            break;
-        case TRIP_ARRIVAL:
-            
-            itoa((int)new_tuple->value->int32,ab,10);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
-            //text_layer_set_text(arrival_layer, ab);
-            break; 
-        case TRIP_DESTINATION:
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:%s", new_tuple->value->cstring);
-            text_layer_set_text(arrival_layer, new_tuple->value->cstring);
-            break;
-        default:
-            break;
+    case REQ_BUS_NB:
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
+      itoa((int)new_tuple->value->int32,nb,10);
+      text_layer_set_text(temperature_layer, nb);
+      break;
+    case REQ_STOP_NB:
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
+      itoa((int)new_tuple->value->int32,sb,10);
+      text_layer_set_text(city_layer, sb);
+      break;
+    case TRIP_ARRIVAL:
+
+      itoa((int)new_tuple->value->int32,ab,10);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
+      //text_layer_set_text(arrival_layer, ab);
+      break;
+    case TRIP_DESTINATION:
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:%s", new_tuple->value->cstring);
+      text_layer_set_text(arrival_layer, new_tuple->value->cstring);
+      break;
+    default:
+      break;
   }
-    /*
-    case WEATHER_ICON_KEY:
-      if (icon_bitmap) {
-        gbitmap_destroy(icon_bitmap);
-      }
-      icon_bitmap = gbitmap_create_with_resource(WEATHER_ICONS[new_tuple->value->uint8]);
-      bitmap_layer_set_bitmap(icon_layer, icon_bitmap);
-      break;
+  /*
+     case WEATHER_ICON_KEY:
+     if (icon_bitmap) {
+     gbitmap_destroy(icon_bitmap);
+     }
+     icon_bitmap = gbitmap_create_with_resource(WEATHER_ICONS[new_tuple->value->uint8]);
+     bitmap_layer_set_bitmap(icon_layer, icon_bitmap);
+     break;
 
-    case WEATHER_TEMPERATURE_KEY:
-      // App Sync keeps new_tuple in sync_buffer, so we may use it directly
-      text_layer_set_text(temperature_layer, new_tuple->value->cstring);
-      break;
+     case WEATHER_TEMPERATURE_KEY:
+  // App Sync keeps new_tuple in sync_buffer, so we may use it directly
+  text_layer_set_text(temperature_layer, new_tuple->value->cstring);
+  break;
 
-    case WEATHER_CITY_KEY:
-      text_layer_set_text(city_layer, new_tuple->value->cstring);
-      break;
-		*/
+  case WEATHER_CITY_KEY:
+  text_layer_set_text(city_layer, new_tuple->value->cstring);
+  break;
+  */
 }
 
 static void send_cmd(void) {
-/*
-Tuplet bus_values[] = {
-    TupletInteger(REQ_BUS_NB, 96),
-    TupletInteger(REQ_STOP_NB, 3011),
-    TupletInteger(TRIP_ARRIVAL, -1),
-    TupletCString(TRIP_DESTINATION, "                "),
-  };
-*/
+  /*
+     Tuplet bus_values[] = {
+     TupletInteger(REQ_BUS_NB, 96),
+     TupletInteger(REQ_STOP_NB, 3011),
+     TupletInteger(TRIP_ARRIVAL, -1),
+     TupletCString(TRIP_DESTINATION, "                "),
+     };
+     */
   Tuplet value = TupletInteger(REQ_BUS_NB, 95);
   Tuplet stopnb = TupletInteger(REQ_STOP_NB, 3011);
   Tuplet arrival = TupletInteger(TRIP_ARRIVAL, -1);
@@ -152,19 +152,19 @@ static void window_load(Window *window) {
 
 
 
-Tuplet bus_values[] = {
+  Tuplet bus_values[] = {
     TupletInteger(REQ_BUS_NB, 96),
     TupletInteger(REQ_STOP_NB, 3011),
     TupletInteger(TRIP_ARRIVAL, -1),
     TupletCString(TRIP_DESTINATION, "                "),
   };
-/*
-  Tuplet initial_values[] = {
-    TupletInteger(WEATHER_ICON_KEY, (uint8_t) 1),
-    TupletCString(WEATHER_TEMPERATURE_KEY, "1234\u00B0C"),
-    TupletCString(WEATHER_CITY_KEY, "St Pebblesburg"),
-  };
-*/
+  /*
+     Tuplet initial_values[] = {
+     TupletInteger(WEATHER_ICON_KEY, (uint8_t) 1),
+     TupletCString(WEATHER_TEMPERATURE_KEY, "1234\u00B0C"),
+     TupletCString(WEATHER_CITY_KEY, "St Pebblesburg"),
+     };
+     */
   app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), bus_values, ARRAY_LENGTH(bus_values),
       sync_tuple_changed_callback, sync_error_callback, NULL);
 
@@ -181,7 +181,7 @@ static void window_unload(Window *window) {
   text_layer_destroy(city_layer);
   text_layer_destroy(arrival_layer);
   text_layer_destroy(temperature_layer);
-//  bitmap_layer_destroy(icon_layer);
+  //  bitmap_layer_destroy(icon_layer);
 }
 
 void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -191,14 +191,14 @@ void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-	window_stack_push((Window*)wind_bus_sel, true);
+  window_stack_push((Window*)wind_bus_sel, true);
 }
 
 void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-	window_stack_push((Window*)wind_stop_sel, true);
+  window_stack_push((Window*)wind_stop_sel, true);
 }
 void config_provider(Window *window) {
- // single click / repeat-on-hold config:
+  // single click / repeat-on-hold config:
   window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
@@ -210,9 +210,9 @@ static void init(void) {
   window_set_background_color(window, GColorBlack);
   window_set_fullscreen(window, true);
   window_set_window_handlers(window, (WindowHandlers) {
-    .load = window_load,
-    .unload = window_unload
-  });
+      .load = window_load,
+      .unload = window_unload
+      });
 
   window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
 
@@ -251,41 +251,41 @@ int main(void) {
 
 
 // Thanks to https://stackoverflow.com/questions/3440726/what-is-the-proper-way-of-implementing-a-good-itoa-function
-// So I don't have to roll my own. 
+// So I don't have to roll my own.
 static int itoa(int value, char *sp, int radix)
 {
-    char tmp[16];// be careful with the length of the buffer
-    char *tp = tmp;
-    int i;
-    unsigned v;
+  char tmp[16];// be careful with the length of the buffer
+  char *tp = tmp;
+  int i;
+  unsigned v;
 
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "%s:value:%d", __func__,value);
-    int sign = (radix == 10 && value < 0);    
-    if (sign)
-        v = -value;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "%s:value:%d", __func__,value);
+  int sign = (radix == 10 && value < 0);
+  if (sign)
+    v = -value;
+  else
+    v = (unsigned)value;
+
+  while (v || tp == tmp)
+  {
+    i = v % radix;
+    v /= radix; // v/=radix uses less CPU clocks than v=v/radix does
+    if (i < 10)
+      *tp++ = i+'0';
     else
-        v = (unsigned)value;
+      *tp++ = i + 'a' - 10;
+  }
 
-    while (v || tp == tmp)
-    {
-        i = v % radix;
-        v /= radix; // v/=radix uses less CPU clocks than v=v/radix does
-        if (i < 10)
-          *tp++ = i+'0';
-        else
-          *tp++ = i + 'a' - 10;
-    }
+  int len = tp - tmp;
 
-    int len = tp - tmp;
+  if (sign)
+  {
+    *sp++ = '-';
+    len++;
+  }
 
-    if (sign) 
-    {
-        *sp++ = '-';
-        len++;
-    }
+  while (tp > tmp)
+    *sp++ = *--tp;
 
-    while (tp > tmp)
-        *sp++ = *--tp;
-
-    return len;
+  return len;
 }
