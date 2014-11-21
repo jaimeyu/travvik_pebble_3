@@ -9,10 +9,10 @@
     "watchface": false
   },
   "appKeys": {
-    "REQ_BUS_NB" : 0,    
-    "REQ_STOP_NB" : 1,   
-    "TRIP_ARRIVAL" : 2,  
-    "TRIP_DESTINATION" : 3
+    "REQ_BUS_NB":0,
+    "REQ_STOP_NB":1,
+    "TRIP_ARRIVAL":2,
+    "TRIP_DESTINATION":3
   },
   "resources": {
     "media": [

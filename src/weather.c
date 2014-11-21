@@ -102,11 +102,28 @@ static void send_cmd(void) {
      TupletCString(TRIP_DESTINATION, "                "),
      };
      */
-  Tuplet value = TupletInteger(REQ_BUS_NB, 95);
-  Tuplet stopnb = TupletInteger(REQ_STOP_NB, 3011);
-  Tuplet arrival = TupletInteger(TRIP_ARRIVAL, -1);
-  Tuplet dst = TupletCString(TRIP_DESTINATION, "Loading");
+  Tuplet value =    TupletInteger(REQ_BUS_NB, 95);
+  Tuplet stopnb =   TupletInteger(REQ_STOP_NB, 3011);
+  Tuplet arrival =  TupletInteger(TRIP_ARRIVAL, -1);
+  Tuplet dst =      TupletCString(TRIP_DESTINATION, "Loading");
+/*
+  Tuplet pairs[] = {
+    TupletInteger(REQ_BUS_NB, 95),
+    TupletInteger(REQ_STOP_NB, 3011),
+    TupletInteger(TRIP_ARRIVAL, -1),  
+    TupletCString(TRIP_DESTINATION, "Loading"),
+  };
+  uint8_t buffer[256];
+  uint32_t size = sizeof(buffer);
+  //dict_serialize_tuplets_to_buffer(pairs, ARRAY_LENGTH(pairs), buffer, &size);
 
+DictionaryIterator *iter;
+app_message_outbox_begin(&iter);
+dict_serialize_tuplets_to_buffer_with_iter(iter,pairs, ARRAY_LENGTH(pairs), buffer, &size);
+
+//dict_write_end(iter);
+app_message_outbox_send();
+*/
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
 
