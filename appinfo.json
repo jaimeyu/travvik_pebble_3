@@ -12,9 +12,7 @@
     "REQ_BUS_NB" : 0,    
     "REQ_STOP_NB" : 1,   
     "TRIP_ARRIVAL" : 2,  
-    "TRIP_ORIGIN" : 3,   
-    "TRIP_DESTINATION" : 4,
-    "TRIP_DIRECTION" : 5
+    "TRIP_DESTINATION" : 3
   },
   "resources": {
     "media": [

@@ -6,11 +6,12 @@ static NumberWindow *wind_stop_sel;
 
 static TextLayer *temperature_layer;
 static TextLayer *city_layer;
-static BitmapLayer *icon_layer;
+static TextLayer *arrival_layer;
+//static BitmapLayer *icon_layer;
 static GBitmap *icon_bitmap = NULL;
 
 static AppSync sync;
-static uint8_t sync_buffer[512];
+static uint8_t sync_buffer[128];
 
 enum WeatherKey {
   WEATHER_ICON_KEY = 0x0,         // TUPLE_INT
@@ -20,11 +21,9 @@ enum WeatherKey {
 
 enum TRIP_KEYS {
   REQ_BUS_NB = 0,     // TUPLE_INT bus #
-  REQ_STOP_NB,      // TUPLE_INT stop #
- 	TRIP_ARRIVAL,     // TUPLE_INT eta
-  TRIP_ORIGIN,      // TUPLE_CSTRING stop name
-  TRIP_DESTINATION, // TUPLE_CSTRING 
-  TRIP_DIRECTION,   // TUPLE_CSTRING 
+  REQ_STOP_NB = 1,      // TUPLE_INT stop #
+  TRIP_ARRIVAL = 2,      // TUPLE_CSTRING stop name
+  TRIP_DESTINATION = 3, // TUPLE_CSTRING 
 };
 
 
@@ -37,12 +36,44 @@ static const uint32_t WEATHER_ICONS[] = {
   RESOURCE_ID_IMAGE_SNOW //3
 };
 
+static 
+int itoa(int value, char *sp, int radix);
+
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
 }
 
 static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
+  static char nb[16];
+  static char sb[16];
+  static char ab[16];
+  //itoa((int)new_tuple->value,nb,15);
+
   switch (key) {
+		case REQ_BUS_NB:
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
+            itoa((int)new_tuple->value->int32,nb,10);
+      			text_layer_set_text(temperature_layer, nb);
+			break;
+        case REQ_STOP_NB:
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
+            itoa((int)new_tuple->value->int32,sb,10);
+            text_layer_set_text(city_layer, sb);
+            break;
+        case TRIP_ARRIVAL:
+            
+            itoa((int)new_tuple->value->int32,ab,10);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
+            //text_layer_set_text(arrival_layer, ab);
+            break; 
+        case TRIP_DESTINATION:
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:%s", new_tuple->value->cstring);
+            text_layer_set_text(arrival_layer, new_tuple->value->cstring);
+            break;
+        default:
+            break;
+  }
+    /*
     case WEATHER_ICON_KEY:
       if (icon_bitmap) {
         gbitmap_destroy(icon_bitmap);
@@ -59,7 +90,7 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
     case WEATHER_CITY_KEY:
       text_layer_set_text(city_layer, new_tuple->value->cstring);
       break;
-  }
+		*/
 }
 
 static void send_cmd(void) {
@@ -81,8 +112,8 @@ static void send_cmd(void) {
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
 
-  icon_layer = bitmap_layer_create(GRect(32, 10, 80, 80));
-  layer_add_child(window_layer, bitmap_layer_get_layer(icon_layer));
+  //icon_layer = bitmap_layer_create(GRect(32, 10, 80, 80));
+  //layer_add_child(window_layer, bitmap_layer_get_layer(icon_layer));
 
   temperature_layer = text_layer_create(GRect(0, 95, 144, 68));
   text_layer_set_text_color(temperature_layer, GColorWhite);
@@ -98,28 +129,32 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(city_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(city_layer));
 
+  arrival_layer = text_layer_create(GRect(0, 25, 144, 68));
+  text_layer_set_text_color(arrival_layer, GColorWhite);
+  text_layer_set_background_color(arrival_layer, GColorClear);
+  text_layer_set_font(arrival_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_text_alignment(arrival_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(arrival_layer));
+
+
+
 Tuplet bus_values[] = {
     TupletInteger(REQ_BUS_NB, 96),
     TupletInteger(REQ_STOP_NB, 3011),
     TupletInteger(TRIP_ARRIVAL, -1),
-    TupletCString(TRIP_ORIGIN, "                          "),
-    TupletCString(TRIP_DESTINATION, "                          "),
-    TupletCString(TRIP_DIRECTION, "                          "),
+    TupletCString(TRIP_DESTINATION, "                "),
   };
-
-
-
-
+/*
   Tuplet initial_values[] = {
     TupletInteger(WEATHER_ICON_KEY, (uint8_t) 1),
     TupletCString(WEATHER_TEMPERATURE_KEY, "1234\u00B0C"),
     TupletCString(WEATHER_CITY_KEY, "St Pebblesburg"),
   };
-
-  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
+*/
+  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), bus_values, ARRAY_LENGTH(bus_values),
       sync_tuple_changed_callback, sync_error_callback, NULL);
 
-  send_cmd();
+  //send_cmd();
 }
 
 static void window_unload(Window *window) {
@@ -130,21 +165,29 @@ static void window_unload(Window *window) {
   }
 
   text_layer_destroy(city_layer);
+  text_layer_destroy(arrival_layer);
   text_layer_destroy(temperature_layer);
-  bitmap_layer_destroy(icon_layer);
+//  bitmap_layer_destroy(icon_layer);
 }
 
+void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Fetching data.");
+  send_cmd();
+}
 
 void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  Window *window = (Window *)context;
 	window_stack_push((Window*)wind_bus_sel, true);
 }
 
+void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+	window_stack_push((Window*)wind_stop_sel, true);
+}
 void config_provider(Window *window) {
  // single click / repeat-on-hold config:
   window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, down_single_click_handler);
-  window_single_click_subscribe(BUTTON_ID_UP, down_single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
 
 }
 
@@ -165,7 +208,7 @@ static void init(void) {
   number_window_set_max(wind_bus_sel, 9999);
   number_window_set_value(wind_bus_sel, 96);
 
-  wind_stop_sel = number_window_create("Bus #",  (NumberWindowCallbacks) {.selected = NULL}, NULL);
+  wind_stop_sel = number_window_create("Stop #",  (NumberWindowCallbacks) {.selected = NULL}, NULL);
   number_window_set_step_size(wind_stop_sel, 1);
   number_window_set_min(wind_stop_sel, 1);
   number_window_set_max(wind_stop_sel, 9999);
@@ -189,4 +232,46 @@ int main(void) {
   init();
   app_event_loop();
   deinit();
+}
+
+
+
+// Thanks to https://stackoverflow.com/questions/3440726/what-is-the-proper-way-of-implementing-a-good-itoa-function
+// So I don't have to roll my own. 
+static int itoa(int value, char *sp, int radix)
+{
+    char tmp[16];// be careful with the length of the buffer
+    char *tp = tmp;
+    int i;
+    unsigned v;
+
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "%s:value:%d", __func__,value);
+    int sign = (radix == 10 && value < 0);    
+    if (sign)
+        v = -value;
+    else
+        v = (unsigned)value;
+
+    while (v || tp == tmp)
+    {
+        i = v % radix;
+        v /= radix; // v/=radix uses less CPU clocks than v=v/radix does
+        if (i < 10)
+          *tp++ = i+'0';
+        else
+          *tp++ = i + 'a' - 10;
+    }
+
+    int len = tp - tmp;
+
+    if (sign) 
+    {
+        *sp++ = '-';
+        len++;
+    }
+
+    while (tp > tmp)
+        *sp++ = *--tp;
+
+    return len;
 }
