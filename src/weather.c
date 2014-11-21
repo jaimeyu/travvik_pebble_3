@@ -13,37 +13,30 @@ static GBitmap *icon_bitmap = NULL;
 static AppSync sync;
 static uint8_t sync_buffer[128];
 
-enum WeatherKey {
-  WEATHER_ICON_KEY = 0x0,         // TUPLE_INT
-  WEATHER_TEMPERATURE_KEY = 0x1,  // TUPLE_CSTRING
-  WEATHER_CITY_KEY = 0x2,         // TUPLE_CSTRING
-};
+static volatile uint8_t direction = 0;
+static volatile uint32_t route = 96;
+static volatile uint32_t stop = 3011;
+static volatile uint8_t busy = 0;
 
 enum TRIP_KEYS {
   KEY_ROUTE = 0,     // TUPLE_INT bus #
   KEY_STOP_NUM = 1,      // TUPLE_INT stop #
   KEY_ETA = 2,      // TUPLE_CSTRING stop name
   KEY_DST = 3, // TUPLE_CSTRING
+  KEY_STATION_STR = 4,
+  KEY_DIRECTION = 5,
 };
 
+static int 
+itoa(int value, char *sp, int radix);
 
-
-
-static const uint32_t WEATHER_ICONS[] = {
-  RESOURCE_ID_IMAGE_SUN, //0
-  RESOURCE_ID_IMAGE_CLOUD, //1
-  RESOURCE_ID_IMAGE_RAIN, //2
-  RESOURCE_ID_IMAGE_SNOW //3
-};
-
-static
-int itoa(int value, char *sp, int radix);
-
-static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
+static void 
+sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
 }
 
-static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
+static void 
+sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
   static char nb[16];
   static char sb[16];
   static char ab[16];
@@ -51,79 +44,49 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 
   switch (key) {
     case KEY_ROUTE:
-      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,nb,10);
       text_layer_set_text(temperature_layer, nb);
       break;
     case KEY_STOP_NUM:
-      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,sb,10);
       text_layer_set_text(city_layer, sb);
       break;
     case KEY_ETA:
 
       itoa((int)new_tuple->value->int32,ab,10);
-      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
       //text_layer_set_text(arrival_layer, ab);
       break;
     case KEY_DST:
-    //  APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:%s", new_tuple->value->cstring);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:");
       text_layer_set_text(arrival_layer, new_tuple->value->cstring);
+      // make it unbusy.
+      busy = 0;
       break;
     default:
       break;
   }
-  /*
-     case WEATHER_ICON_KEY:
-     if (icon_bitmap) {
-     gbitmap_destroy(icon_bitmap);
-     }
-     icon_bitmap = gbitmap_create_with_resource(WEATHER_ICONS[new_tuple->value->uint8]);
-     bitmap_layer_set_bitmap(icon_layer, icon_bitmap);
-     break;
-
-     case WEATHER_TEMPERATURE_KEY:
-  // App Sync keeps new_tuple in sync_buffer, so we may use it directly
-  text_layer_set_text(temperature_layer, new_tuple->value->cstring);
-  break;
-
-  case WEATHER_CITY_KEY:
-  text_layer_set_text(city_layer, new_tuple->value->cstring);
-  break;
-  */
 }
 
 static void send_cmd(void) {
-  /*
-     Tuplet bus_values[] = {
-     TupletInteger(KEY_ROUTE, 96),
-     TupletInteger(KEY_STOP_NUM, 3011),
-     TupletInteger(KEY_ETA, -1),
-     TupletCString(KEY_DST, "                "),
-     };
-     */
-  Tuplet value =    TupletInteger(KEY_ROUTE, 95);
-  Tuplet stopnb =   TupletInteger(KEY_STOP_NUM, 3011);
+  // Don't send if we're busy sending a request.
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Still handling old req");
+  if (busy != 0){
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Still handling old req");
+    return;
+  }
+
+  busy = 1;
+
+  Tuplet value =    TupletInteger(KEY_ROUTE, route);
+  Tuplet stopnb =   TupletInteger(KEY_STOP_NUM, stop);
   Tuplet arrival =  TupletInteger(KEY_ETA, -1);
   Tuplet dst =      TupletCString(KEY_DST, "Loading");
-/*
-  Tuplet pairs[] = {
-    TupletInteger(KEY_ROUTE, 95),
-    TupletInteger(KEY_STOP_NUM, 3011),
-    TupletInteger(KEY_ETA, -1),  
-    TupletCString(KEY_DST, "Loading"),
-  };
-  uint8_t buffer[256];
-  uint32_t size = sizeof(buffer);
-  //dict_serialize_tuplets_to_buffer(pairs, ARRAY_LENGTH(pairs), buffer, &size);
+  Tuplet station_str = TupletCString(KEY_DST, "");
+  Tuplet dir = TupletInteger(KEY_DIRECTION, direction); 
 
-DictionaryIterator *iter;
-app_message_outbox_begin(&iter);
-dict_serialize_tuplets_to_buffer_with_iter(iter,pairs, ARRAY_LENGTH(pairs), buffer, &size);
-
-//dict_write_end(iter);
-app_message_outbox_send();
-*/
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
 
@@ -135,6 +98,8 @@ app_message_outbox_send();
   dict_write_tuplet(iter, &stopnb);
   dict_write_tuplet(iter, &arrival);
   dict_write_tuplet(iter, &dst);
+  dict_write_tuplet(iter, &station_str);
+  dict_write_tuplet(iter, &dir);
   dict_write_end(iter);
 
   app_message_outbox_send();
@@ -173,17 +138,16 @@ static void window_load(Window *window) {
     TupletInteger(KEY_ROUTE, 96),
     TupletInteger(KEY_STOP_NUM, 3011),
     TupletInteger(KEY_ETA, -1),
-    TupletCString(KEY_DST, "                "),
+    TupletCString(KEY_DST, "                 "),
+    TupletCString(KEY_STATION_STR, "         "),
+    TupletInteger(KEY_DIRECTION, 0),
   };
-  /*
-     Tuplet initial_values[] = {
-     TupletInteger(WEATHER_ICON_KEY, (uint8_t) 1),
-     TupletCString(WEATHER_TEMPERATURE_KEY, "1234\u00B0C"),
-     TupletCString(WEATHER_CITY_KEY, "St Pebblesburg"),
-     };
-     */
-  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), bus_values, ARRAY_LENGTH(bus_values),
-      sync_tuple_changed_callback, sync_error_callback, NULL);
+
+    int inbound_size = app_message_inbox_size_maximum();
+    int outbound_size = app_message_outbox_size_maximum();
+    app_message_open(inbound_size, outbound_size);
+    app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), bus_values, ARRAY_LENGTH(bus_values),
+    sync_tuple_changed_callback, sync_error_callback, NULL);
 
   //send_cmd();
 }
@@ -245,11 +209,6 @@ static void init(void) {
   number_window_set_max(wind_stop_sel, 9999);
   number_window_set_value(wind_stop_sel, 96);
 
-
-  const int inbound_size = 64;
-  const int outbound_size = 64;
-  app_message_open(inbound_size, outbound_size);
-
   const bool animated = true;
   window_stack_push(window, animated);
   //window_stack_push((Window*)wind_bus_sel, true);
@@ -276,7 +235,7 @@ static int itoa(int value, char *sp, int radix)
   int i;
   unsigned v;
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "%s:value:%d", __func__,value);
+//  APP_LOG(APP_LOG_LEVEL_DEBUG, "%s:value:%d", __func__,value);
   int sign = (radix == 10 && value < 0);
   if (sign)
     v = -value;

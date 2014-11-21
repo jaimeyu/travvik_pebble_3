@@ -38,9 +38,9 @@ flags = [
 'c++',
 
 # include third party libraries
-#'-isystem',
 #'/usr/include/python2.7',
-'~/pebble-dev/PebbleSDK-2.7/Pebble/include'
+'-isystem',
+'/home/jaime/pebble-dev/PebbleSDK-2.7/Pebble/include'
 ]
 
 # youcompleteme is calling this function to get flags

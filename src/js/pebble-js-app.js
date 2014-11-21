@@ -13,6 +13,7 @@ function parseTravvikData(response, route, station, direction){
     else if (direction === 0 || response.arrival1 === null){
       stop_eta = response.arrival0;
       route_destination = response.destination0;
+      direction = 0;
     }
     else {
       stop_eta = response.arrival1;
@@ -29,8 +30,25 @@ function parseTravvikData(response, route, station, direction){
     "KEY_ROUTE" : parseInt(route),    
     "KEY_STOP_NUM" : parseInt(station),   
     "KEY_ETA" : parseInt(stop_eta),  
-    "KEY_DST" : route_destination
+    "KEY_DST" : route_destination.substring(0,15),
+    "KEY_STATION_STR" : stop_name.substring(0,8),
+    "KEY_DIRECTION" : parseInt(direction)
   });
+
+/*Pebble.sendAppMessage({
+    "KEY_ROUTE" : parseInt(route),    
+    "KEY_STOP_NUM" : parseInt(station),   
+    "KEY_ETA" : parseInt(stop_eta),  
+    "KEY_DST" : route_destination,
+    "KEY_STATION_STR" : "0",
+    "KEY_DIRECTION" : parseInt(direction)
+  });
+*/
+  // No error detector, save the values.
+  localStorage.setItem("last_station", station);
+  localStorage.setItem("last_route", route);
+  localStorage.setItem("last_direction", direction);
+
 
 }
 
@@ -49,11 +67,7 @@ function fetch_next_bus(route, station, direction) {
       
       parseTravvikData(response, route, station, direction);
 
-      // No error detector, save the values.
-      localStorage.setItem("last_station", station);
-      localStorage.setItem("last_route", route);
-      localStorage.setItem("last_direction", direction);
-      console.log("Sent data to pebble");
+            console.log("Sent data to pebble");
     }
   } 
 };
@@ -72,10 +86,12 @@ Pebble.addEventListener("ready",
       last_route =   localStorage.getItem("last_route");
       last_direction = localStorage.getItem("last_direction");
       if ( last_station === null || last_route === null || last_direction === null) {
-        last_station = 3011;
-        last_route = 97;
+        console.log("Can't find old data to sync");
+        last_station = -1;
+        last_route = -1;
         last_direction = 0;
       }
+      
       fetch_next_bus(last_route, last_station, last_direction);
 
     });
