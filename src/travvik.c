@@ -7,6 +7,7 @@ static NumberWindow *wind_stop_sel;
 static TextLayer *layer_destination;
 static TextLayer *layer_route;
 static TextLayer *layer_eta;
+static TextLayer *layer_eta_mins_str;
 static TextLayer *layer_station;
 static TextLayer *layer_station_str;
 //static BitmapLayer *icon_layer;
@@ -49,11 +50,13 @@ sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tu
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,nb,10);
       text_layer_set_text(layer_route, nb);
+      number_window_set_value(wind_bus_sel, (int)new_tuple->value->int32);
       break;
     case KEY_STOP_NUM:
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,sb,10);
       text_layer_set_text(layer_station, sb);
+      number_window_set_value(wind_stop_sel, (int)new_tuple->value->int32);
       break;
     case KEY_ETA:
       itoa((int)new_tuple->value->int32,ab,10);
@@ -101,7 +104,7 @@ static void send_cmd(void) {
   Tuplet stopnb =   TupletInteger(KEY_STOP_NUM, stop);
   Tuplet arrival =  TupletInteger(KEY_ETA, -1);
   Tuplet dst =      TupletCString(KEY_DST, "Loading");
-  Tuplet station_str = TupletCString(KEY_DST, "");
+  Tuplet station_str = TupletCString(KEY_DST, "Loading");
   Tuplet dir = TupletInteger(KEY_DIRECTION, direction); 
 
   DictionaryIterator *iter;
@@ -160,6 +163,15 @@ What the output needs to look like
   text_layer_set_text_alignment(layer_eta, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(layer_eta));
 
+  layer_eta_mins_str  = text_layer_create(GRect(115, 90 , 144, 68));
+  text_layer_set_text_color(layer_eta_mins_str, GColorWhite);
+  text_layer_set_background_color(layer_eta_mins_str, GColorClear);
+  text_layer_set_font(layer_eta_mins_str, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  text_layer_set_text_alignment(layer_eta_mins_str, GTextAlignmentLeft);
+  text_layer_set_text(layer_eta_mins_str, "mins");
+  layer_add_child(window_layer, text_layer_get_layer(layer_eta_mins_str));
+
+
   layer_station = text_layer_create(GRect(0, 100, 144, 68));
   text_layer_set_text_color(layer_station, GColorWhite);
   text_layer_set_background_color(layer_station, GColorClear);
@@ -181,8 +193,8 @@ What the output needs to look like
     TupletInteger(KEY_ROUTE, -1),
     TupletInteger(KEY_STOP_NUM, -1),
     TupletInteger(KEY_ETA, -1),
-    TupletCString(KEY_DST, "  bootup         "),
-    TupletCString(KEY_STATION_STR, " none     "),
+    TupletCString(KEY_DST, "  bootup              "),
+    TupletCString(KEY_STATION_STR, " none            "),
     TupletInteger(KEY_DIRECTION, 0),
   };
 
@@ -204,6 +216,7 @@ static void window_unload(Window *window) {
 
   text_layer_destroy(layer_route);
   text_layer_destroy(layer_eta);
+  text_layer_destroy(layer_eta_mins_str);
   text_layer_destroy(layer_destination);
   text_layer_destroy(layer_station);
   text_layer_destroy(layer_station_str);
@@ -212,6 +225,7 @@ static void window_unload(Window *window) {
 
 void select_long_click_handler(ClickRecognizerRef recognizer, void *context){
   //Should update the screen saying you're changing direction.
+  text_layer_set_text(layer_destination, "Switching Direction");
 }
 
 void select_long_click_release_handler(ClickRecognizerRef recognizer, void *context){
@@ -226,11 +240,11 @@ void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  window_stack_push((Window*)wind_bus_sel, true);
+  window_stack_push((Window*)wind_stop_sel, true);
 }
 
 void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  window_stack_push((Window*)wind_stop_sel, true);
+  window_stack_push((Window*)wind_bus_sel, true);
 }
 
 void pop_window(NumberWindow *number_window, void *context) {

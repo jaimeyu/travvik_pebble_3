@@ -30,8 +30,8 @@ function parseTravvikData(response, route, station, direction){
     "KEY_ROUTE" : parseInt(route),    
     "KEY_STOP_NUM" : parseInt(station),   
     "KEY_ETA" : parseInt(stop_eta),  
-    "KEY_DST" : route_destination.substring(0,15),
-    "KEY_STATION_STR" : stop_name.substring(0,8),
+    "KEY_DST" : route_destination.substring(0,24),
+    "KEY_STATION_STR" : stop_name.substring(0,24),
     "KEY_DIRECTION" : parseInt(direction)
   });
 
@@ -45,6 +45,7 @@ function parseTravvikData(response, route, station, direction){
   });
 */
   // No error detector, save the values.
+  console.log("Saving data:" + station + " " + route + " " + direction);  
   localStorage.setItem("last_station", station);
   localStorage.setItem("last_route", route);
   localStorage.setItem("last_direction", direction);
@@ -96,7 +97,7 @@ Pebble.addEventListener("ready",
         last_route = -1;
         last_direction = 0;
       }
-      
+      console.log("Old data:" + last_station + " " + last_route + " " + last_direction);  
       fetch_next_bus(last_route, last_station, last_direction);
 
     });
