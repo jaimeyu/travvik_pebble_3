@@ -1,5 +1,12 @@
 #include "pebble.h"
 
+#define DEBUG true;
+#ifdef DEBUG 
+#define TIMER (1000*5) // 5 seconds
+#else
+#define TIMER (1000*60)
+#endif
+
 static Window *window;
 static NumberWindow *wind_bus_sel;
 static NumberWindow *wind_stop_sel;
@@ -42,47 +49,54 @@ sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_er
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
 }
 
+void set_eta_layer() {
+  static char ab[16];
+  if (eta < -1){
+    text_layer_set_text(layer_eta, "0");
+    return;
+  }
+  itoa(eta,ab,10);
+  text_layer_set_text(layer_eta, ab);
+}
+
 static void 
 sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
   static char nb[16];
   static char sb[16];
-  static char ab[16];
   //itoa((int)new_tuple->value,nb,15);
 
   switch (key) {
     case KEY_ROUTE:
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,nb,10);
       text_layer_set_text(layer_route, nb);
       number_window_set_value(wind_bus_sel, (int)new_tuple->value->int32);
       break;
     case KEY_STOP_NUM:
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,sb,10);
       text_layer_set_text(layer_station, sb);
       number_window_set_value(wind_stop_sel, (int)new_tuple->value->int32);
       break;
     case KEY_ETA:
-      eta = new_tuple->value->int32;
-      itoa((int)new_tuple->value->int32,ab,10);
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: arrival %d", (int)new_tuple->value->int32);
-      text_layer_set_text(layer_eta, ab);
+      eta = new_tuple->value->int16;
+      set_eta_layer();
       break;
     case KEY_DST:
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:");
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:");
       text_layer_set_text(layer_destination, new_tuple->value->cstring);
       // make it unbusy.
       busy = 0;
       break;
     case KEY_DIRECTION:
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: direction:");
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: direction:");
 //      text_layer_set_text(layer_eta, new_tuple->value->cstring);
       // make it unbusy.
       busy = 0;
       break;
  
     case KEY_STATION_STR:
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: station name:");
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: station name:");
       text_layer_set_text(layer_station_str, new_tuple->value->cstring);
       // make it unbusy.
       busy = 0;
@@ -94,23 +108,23 @@ sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tu
 }
 
 void decrement_eta_handler(void *data){
-  static char ab[16];
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Decrementing eta");
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Decrementing eta");
   if (--refresh_count >= 0){
     eta--;
     if (eta >= 0){
-      itoa(eta,ab,10);
-      text_layer_set_text(layer_eta, ab);
+      set_eta_layer();
     }
-    else {
+    else if (eta == -1){
+      set_eta_layer();
       send_cmd();
+      refresh_count = 3;
     }
   }
   else{
     send_cmd();
     refresh_count = 3;
   }
-  app_timer_register(1000*60, decrement_eta_handler, NULL);
+  app_timer_register(TIMER, decrement_eta_handler, NULL);
 }
 
 static void send_cmd(void) {
@@ -127,7 +141,7 @@ static void send_cmd(void) {
 
   Tuplet value =    TupletInteger(KEY_ROUTE, route);
   Tuplet stopnb =   TupletInteger(KEY_STOP_NUM, stop);
-  Tuplet arrival =  TupletInteger(KEY_ETA, -1);
+  Tuplet arrival =  TupletInteger(KEY_ETA, 0);
   Tuplet dst =      TupletCString(KEY_DST, "Loading");
   Tuplet station_str = TupletCString(KEY_DST, "Loading");
   Tuplet dir = TupletInteger(KEY_DIRECTION, direction); 
@@ -229,7 +243,7 @@ What the output needs to look like
     app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), bus_values, ARRAY_LENGTH(bus_values),
     sync_tuple_changed_callback, sync_error_callback, NULL);
 
-    app_timer_register(1000*60, decrement_eta_handler, NULL);
+    app_timer_register(TIMER, decrement_eta_handler, NULL);
 
   //send_cmd();
 }
@@ -336,6 +350,10 @@ static int itoa(int value, char *sp, int radix)
   char *tp = tmp;
   int i;
   unsigned v;
+  for (int i = 0; i < 16; i++){
+    sp[i] = '\0';
+    tmp[i] = '\0';
+    }
 
 //  APP_LOG(APP_LOG_LEVEL_DEBUG, "%s:value:%d", __func__,value);
   int sign = (radix == 10 && value < 0);
