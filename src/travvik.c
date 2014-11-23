@@ -40,6 +40,8 @@ enum TRIP_KEYS {
   KEY_DIRECTION = 5,
 };
 
+#define STR_FETCHING "Fetching..."
+
 static int 
 itoa(int value, char *sp, int radix);
 
@@ -143,8 +145,8 @@ static void send_cmd(void) {
   Tuplet value =    TupletInteger(KEY_ROUTE, route);
   Tuplet stopnb =   TupletInteger(KEY_STOP_NUM, stop);
   Tuplet arrival =  TupletInteger(KEY_ETA, 0);
-  Tuplet dst =      TupletCString(KEY_DST, "Loading");
-  Tuplet station_str = TupletCString(KEY_DST, "Loading");
+  Tuplet dst =      TupletCString(KEY_DST, STR_FETCHING);
+  Tuplet station_str = TupletCString(KEY_DST, STR_FETCHING);
   Tuplet dir = TupletInteger(KEY_DIRECTION, direction); 
 
   DictionaryIterator *iter;

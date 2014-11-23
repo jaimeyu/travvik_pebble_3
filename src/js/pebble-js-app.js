@@ -1,3 +1,22 @@
+function error_fetching(route, station, direction){
+  console.log("Error in response.");
+  stop_eta = 42;
+  //route_destination = "(╯°□°）╯︵ ┻━┻";
+  route_destination = "(J*_*)J^|_|";
+  stop_name = "Sry. No data.";
+ 
+  Pebble.sendAppMessage({
+    "KEY_ROUTE" : parseInt(route),    
+    "KEY_STOP_NUM" : parseInt(station),   
+    "KEY_ETA" : parseInt(stop_eta),  
+    "KEY_DST" : route_destination.substring(0,24),
+    "KEY_STATION_STR" : stop_name.substring(0,24),
+    "KEY_DIRECTION" : parseInt(direction)
+  });
+
+
+}
+
 function parseTravvikData(response, route, station, direction){
   var stop_eta = null, route_destination = null, stop_name = null;
 
@@ -5,11 +24,9 @@ function parseTravvikData(response, route, station, direction){
   /*{"station":"TUNNEY PASTURE","route":"97","stop_eta":"14","destination0":"Airport \/ A\u00e9roport","arrival1":"2","destination1":"Bayshore"}*/
   try {
     stop_name = response.station;
-    if (response.route === -1){
-      console.log("Error in response.");
-      stop_eta = -1;
-      route_destination = "Sry. No data found:(";
-      stop_name = "T.T";
+    if (response.route === ""){
+      error_fetching(route, station, direction);
+      return;
     }
     else if (direction === 0 || direction === "0" || response.arrival1 === ""){
       console.log("Grabbing from direction 0");
@@ -39,15 +56,6 @@ function parseTravvikData(response, route, station, direction){
     "KEY_DIRECTION" : parseInt(direction)
   });
 
-/*Pebble.sendAppMessage({
-    "KEY_ROUTE" : parseInt(route),    
-    "KEY_STOP_NUM" : parseInt(station),   
-    "KEY_ETA" : parseInt(stop_eta),  
-    "KEY_DST" : route_destination,
-    "KEY_STATION_STR" : "0",
-    "KEY_DIRECTION" : parseInt(direction)
-  });
-*/
   // No error detector, save the values.
   console.log("Saving data:" + station + " " + route + " " + direction);  
   localStorage.setItem("last_station", station);
@@ -65,7 +73,8 @@ function fetch_next_bus(route, station, direction) {
       "routeno=" + route + "&stopno=" + station + "&src=pebble";
 
   console.log("Fetching from:" + uri);
-      
+  req.timeout = (1000*5); // 5 second timeout
+  req.ontimeout = error_fetching(route, station, direction);
   req.open('GET', uri , true);
   req.onload = function(e) {
   if (req.readyState === 4) {
@@ -74,12 +83,15 @@ function fetch_next_bus(route, station, direction) {
       //console.log(escape(req.responseText));
       console.log(req.responseText);
       response = JSON.parse(req.responseText);
-      
       parseTravvikData(response, route, station, direction);
-
-            console.log("Sent data to pebble");
+      console.log("Sent data to pebble");
     }
-  } 
+    else {
+      error_fetching(route, station, direction);
+      }
+  } else {
+    error_fetching(route, station, direction);
+    }
 };
 req.send(null);
 
