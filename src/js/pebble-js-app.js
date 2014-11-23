@@ -6,18 +6,22 @@ function parseTravvikData(response, route, station, direction){
   try {
     stop_name = response.station;
     if (response.route === -1){
+      console.log("Error in response.");
       stop_eta = -1;
       route_destination = "Sry. No data found:(";
       stop_name = "T.T";
     }
-    else if (direction === 0 || response.arrival1 === null){
+    else if (direction === 0 || direction === "0" || response.arrival1 === ""){
+      console.log("Grabbing from direction 0");
       stop_eta = response.arrival0;
       route_destination = response.destination0;
       direction = 0;
     }
     else {
+      console.log("Grabbing from direction 1");
       stop_eta = response.arrival1;
       route_destination = response.destination1;
+      direction = 1;
     }
   }
   catch (e) {

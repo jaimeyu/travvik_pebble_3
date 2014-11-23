@@ -1,6 +1,7 @@
 #include "pebble.h"
 
-#define DEBUG true;
+//#define DEBUG 
+#undef DEBUG 
 #ifdef DEBUG 
 #define TIMER (1000*5) // 5 seconds
 #else
