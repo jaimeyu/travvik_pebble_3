@@ -1,10 +1,10 @@
 {
-  "uuid": "744613f3-8a0f-4ab6-921f-83344b9a4441",
+  "uuid": "decafbad-8a0f-4bb6-971f-8937c2ed4441",
   "shortName": "travvik",
   "longName": "travvik: OC Transpo ETA",
   "companyName": "Yu'r",
   "versionCode": 2,
-  "versionLabel": "2.0",
+  "versionLabel": "3.0",
   "watchapp": {
     "watchface": false
   },

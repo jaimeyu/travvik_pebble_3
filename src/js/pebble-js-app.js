@@ -109,8 +109,8 @@ Pebble.addEventListener("ready",
       last_direction = localStorage.getItem("last_direction");
       if ( last_station === null || last_route === null || last_direction === null) {
         console.log("Can't find old data to sync");
-        last_station = -1;
-        last_route = -1;
+        last_station = 97;
+        last_route = 3000;
         last_direction = 0;
       }
       console.log("Old data:" + last_station + " " + last_route + " " + last_direction);  
