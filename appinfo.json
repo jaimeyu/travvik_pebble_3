@@ -1,17 +1,20 @@
 {
-  "uuid": "74460383-8a0f-4bb6-971f-8937c2ed4441",
-  "shortName": "PebbleJS Weather",
-  "longName": "PebbleJS Weather",
-  "companyName": "Pebble Technology",
+  "uuid": "decafbad-8a0f-4bb6-971f-8937c2ed4441",
+  "shortName": "travvik",
+  "longName": "travvik: OC Transpo ETA",
+  "companyName": "Yu'r",
   "versionCode": 2,
-  "versionLabel": "2.0",
+  "versionLabel": "3.0",
   "watchapp": {
     "watchface": false
   },
   "appKeys": {
-    "city": 2,
-    "temperature": 1,
-    "icon": 0
+    "KEY_ROUTE":0,
+    "KEY_STOP_NUM":1,
+    "KEY_ETA":2,
+    "KEY_DST":3,
+    "KEY_STATION_STR":4,
+    "KEY_DIRECTION": 5
   },
   "resources": {
     "media": [
