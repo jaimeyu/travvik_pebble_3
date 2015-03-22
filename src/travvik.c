@@ -1,4 +1,5 @@
 #include "pebble.h"
+#include "nb_selector.h"
 
 //#define DEBUG 
 #undef DEBUG 
@@ -9,6 +10,7 @@
 #endif
 
 static Window *window;
+static Window *nb_selector;
 static NumberWindow *wind_bus_sel;
 static NumberWindow *wind_stop_sel;
 
@@ -16,6 +18,7 @@ static TextLayer *layer_destination;
 static TextLayer *layer_route;
 static TextLayer *layer_eta;
 static TextLayer *layer_eta_mins_str;
+static TextLayer *layer_gps_str;
 static TextLayer *layer_station;
 static TextLayer *layer_station_str;
 //static BitmapLayer *icon_layer;
@@ -57,6 +60,29 @@ sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_er
     //error_flag = 1;
   }
 }
+
+//nb selector windows
+//static void window_nb_selector_load(Window* window);
+//static void window_nb_selector_unload(Window* window);
+//static TextLayer *sel0;
+//static void window_nb_selector_load(Window *window) {
+//  Layer *window_layer = window_get_root_layer(window);
+//
+//  sel0= text_layer_create(GRect(0, 50 , 144, 68));
+//  text_layer_set_text_color(sel0, GColorWhite);
+//  text_layer_set_background_color(sel0, GColorClear);
+//  text_layer_set_font(sel0, fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49));
+//  text_layer_set_text_alignment(sel0, GTextAlignmentCenter);
+//  layer_add_child(window_layer, text_layer_get_layer(sel0));
+//
+//}
+//
+//static void window_nb_selector_unload(Window *window) {
+//  text_layer_destroy(sel0);
+//}
+
+
+// End of nb selector
 
 void set_eta_layer() {
   static char ab[16];
@@ -230,14 +256,14 @@ Station name
   text_layer_set_overflow_mode (layer_destination, GTextOverflowModeFill);
   layer_add_child(window_layer, text_layer_get_layer(layer_destination));
 
-  layer_eta = text_layer_create(GRect(0, 50 , 144, 68));
+  layer_eta = text_layer_create(GRect(0, 30 , 144, 68));
   text_layer_set_text_color(layer_eta, GColorWhite);
   text_layer_set_background_color(layer_eta, GColorClear);
   text_layer_set_font(layer_eta, fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49));
   text_layer_set_text_alignment(layer_eta, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(layer_eta));
 
-  layer_eta_mins_str  = text_layer_create(GRect(115, 90 , 144, 68));
+  layer_eta_mins_str  = text_layer_create(GRect(115, 80 , 144, 68));
   text_layer_set_text_color(layer_eta_mins_str, GColorWhite);
   text_layer_set_background_color(layer_eta_mins_str, GColorClear);
   text_layer_set_font(layer_eta_mins_str, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
@@ -246,19 +272,27 @@ Station name
   layer_add_child(window_layer, text_layer_get_layer(layer_eta_mins_str));
 
 
-  layer_station = text_layer_create(GRect(0, 100, 144, 68));
+  layer_station = text_layer_create(GRect(0, 90, 144, 68));
   text_layer_set_text_color(layer_station, GColorWhite);
   text_layer_set_background_color(layer_station, GColorClear);
   text_layer_set_font(layer_station, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_alignment(layer_station, GTextAlignmentLeft);
   layer_add_child(window_layer, text_layer_get_layer(layer_station));
 
-  layer_station_str = text_layer_create(GRect(0, 130, 144, 68));
+  layer_station_str = text_layer_create(GRect(0, 120, 144, 68));
   text_layer_set_text_color(layer_station_str, GColorBlack);
   text_layer_set_background_color(layer_station_str, GColorWhite);
   text_layer_set_font(layer_station_str, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_alignment(layer_station_str, GTextAlignmentLeft);
   layer_add_child(window_layer, text_layer_get_layer(layer_station_str));
+
+  layer_gps_str  = text_layer_create(GRect(50, 100 , 144, 68));
+  text_layer_set_text_color(layer_gps_str, GColorWhite);
+  text_layer_set_background_color(layer_gps_str, GColorClear);
+  text_layer_set_font(layer_gps_str, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_text_alignment(layer_gps_str, GTextAlignmentLeft);
+  text_layer_set_text(layer_gps_str, "GPS tracking");
+  layer_add_child(window_layer, text_layer_get_layer(layer_gps_str));
 
 
 
@@ -339,13 +373,21 @@ void config_provider(Window *window) {
 static void init(void) {
   window = window_create();
   window_set_background_color(window, GColorBlack);
-  window_set_fullscreen(window, true);
+  window_set_fullscreen(window, false);
   window_set_window_handlers(window, (WindowHandlers) {
       .load = window_load,
       .unload = window_unload
       });
 
   window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
+
+  nb_selector = window_create();
+  window_set_background_color(nb_selector, GColorBlack);
+  window_set_fullscreen(nb_selector, false);
+  window_set_window_handlers(nb_selector, (WindowHandlers) {
+      .load = window_nb_selector_load,
+      .unload = window_nb_selector_unload
+      });
 
   wind_bus_sel = number_window_create("Bus #",  (NumberWindowCallbacks) {.selected = pop_window}, NULL);
   number_window_set_step_size(wind_bus_sel, 1);
@@ -421,3 +463,5 @@ static int itoa(int value, char *sp, int radix)
 
   return len;
 }
+
+
