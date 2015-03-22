@@ -50,6 +50,8 @@ static void send_cmd(void);
 static void 
 sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "DictError:%d",dict_error);
+
 }
 
 void set_eta_layer() {
@@ -171,19 +173,18 @@ static void window_load(Window *window) {
 /*
 What the output needs to look like
 
-       route# Destination
-
-           ETA
-       station(#)
-
-
+|route|Route name|
+    ETA
+    ETA
+Station
+Station name
 
 */
 
 
   Layer *window_layer = window_get_root_layer(window);
 
-  layer_route = text_layer_create(GRect(0, 0, 30, 30));
+  layer_route = text_layer_create(GRect(0, 0, 40, 30));
   text_layer_set_text_color(layer_route, GColorWhite);
   text_layer_set_background_color(layer_route, GColorClear);
   text_layer_set_font(layer_route, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
