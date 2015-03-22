@@ -47,11 +47,15 @@ itoa(int value, char *sp, int radix);
 
 static void send_cmd(void);
 
+
+static uint8_t error_flag = 0;
 static void 
 sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "DictError:%d",dict_error);
-
+  if ( app_message_error == 64){
+    //error_flag = 1;
+  }
 }
 
 void set_eta_layer() {
@@ -64,51 +68,75 @@ void set_eta_layer() {
   text_layer_set_text(layer_eta, ab);
 }
 
+typedef struct {
+
+    union {
+        uint8_t route:1;
+        uint8_t stop:1;
+        uint8_t eta:1;
+        uint8_t dst:1;
+        uint8_t stopstr:1;
+        uint8_t direction:1;
+        uint8_t rsvd:2;
+    };
+    uint8_t mask;
+} MASK_TUPLE_T;
+
+#define MASK_TUPLE_RDY (0b00111111)
+#define MASK_TUPLE_RST (0)
+
+static MASK_TUPLE_T mask_rcv = {.mask = MASK_TUPLE_RST };
 static void 
 sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
   static char nb[16];
   static char sb[16];
   //itoa((int)new_tuple->value,nb,15);
 
+  if (error_flag == 1) return;
   switch (key) {
     case KEY_ROUTE:
-      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,nb,10);
       text_layer_set_text(layer_route, nb);
       number_window_set_value(wind_bus_sel, (int)new_tuple->value->int32);
+      mask_rcv.route = 1;
       break;
     case KEY_STOP_NUM:
-      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
       itoa((int)new_tuple->value->int32,sb,10);
       text_layer_set_text(layer_station, sb);
       number_window_set_value(wind_stop_sel, (int)new_tuple->value->int32);
+      mask_rcv.stop = 1;
       break;
     case KEY_ETA:
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: ETA:%d", new_tuple->value->int16);
       eta = new_tuple->value->int16;
       set_eta_layer();
+      mask_rcv.eta = 1;
       break;
     case KEY_DST:
-      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:");
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: dst:%s",new_tuple->value->cstring);
       text_layer_set_text(layer_destination, new_tuple->value->cstring);
       // make it unbusy.
-      busy = 0;
+      mask_rcv.dst = 1;
       break;
     case KEY_DIRECTION:
-      //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: direction:");
-//      text_layer_set_text(layer_eta, new_tuple->value->cstring);
-      // make it unbusy.
-      busy = 0;
+      mask_rcv.direction = 1;
       break;
- 
     case KEY_STATION_STR:
       //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: station name:");
       text_layer_set_text(layer_station_str, new_tuple->value->cstring);
-      // make it unbusy.
-      busy = 0;
+      mask_rcv.stopstr= 1;
       break;
- 
     default:
       break;
+  }
+
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "mask_rcv.mask:%X", mask_rcv.mask);
+  if (mask_rcv.mask == MASK_TUPLE_RDY){
+      vibes_short_pulse();
+      mask_rcv.mask = MASK_TUPLE_RST;
+      busy = 0;
   }
 }
 
@@ -139,6 +167,8 @@ static void send_cmd(void) {
     return;
   }
 
+  error_flag = 0;
+
   //busy = 1;
 
   route = number_window_get_value(wind_bus_sel);
@@ -167,6 +197,7 @@ static void send_cmd(void) {
   dict_write_end(iter);
 
   app_message_outbox_send();
+  //busy = 1;
 }
 
 static void window_load(Window *window) {
@@ -294,6 +325,7 @@ void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 void pop_window(NumberWindow *number_window, void *context) {
   window_stack_pop(true);
+  send_cmd();
 }
 
 void config_provider(Window *window) {
