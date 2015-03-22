@@ -61,29 +61,6 @@ sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_er
   }
 }
 
-//nb selector windows
-//static void window_nb_selector_load(Window* window);
-//static void window_nb_selector_unload(Window* window);
-//static TextLayer *sel0;
-//static void window_nb_selector_load(Window *window) {
-//  Layer *window_layer = window_get_root_layer(window);
-//
-//  sel0= text_layer_create(GRect(0, 50 , 144, 68));
-//  text_layer_set_text_color(sel0, GColorWhite);
-//  text_layer_set_background_color(sel0, GColorClear);
-//  text_layer_set_font(sel0, fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49));
-//  text_layer_set_text_alignment(sel0, GTextAlignmentCenter);
-//  layer_add_child(window_layer, text_layer_get_layer(sel0));
-//
-//}
-//
-//static void window_nb_selector_unload(Window *window) {
-//  text_layer_destroy(sel0);
-//}
-
-
-// End of nb selector
-
 void set_eta_layer() {
   static char ab[16];
   if (eta < -1){
@@ -294,9 +271,6 @@ Station name
   text_layer_set_text(layer_gps_str, "GPS tracking");
   layer_add_child(window_layer, text_layer_get_layer(layer_gps_str));
 
-
-
-
   Tuplet bus_values[] = {
     TupletInteger(KEY_ROUTE, -1),
     TupletInteger(KEY_STOP_NUM, -1),
@@ -327,33 +301,35 @@ static void window_unload(Window *window) {
   text_layer_destroy(layer_route);
   text_layer_destroy(layer_eta);
   text_layer_destroy(layer_eta_mins_str);
+  text_layer_destroy(layer_gps_str);
   text_layer_destroy(layer_destination);
   text_layer_destroy(layer_station);
   text_layer_destroy(layer_station_str);
   //  bitmap_layer_destroy(icon_layer);
 }
 
-void select_long_click_handler(ClickRecognizerRef recognizer, void *context){
+static void select_long_click_handler(ClickRecognizerRef recognizer, void *context){
   //Should update the screen saying you're changing direction.
   text_layer_set_text(layer_destination, "Switching Direction");
 }
 
-void select_long_click_release_handler(ClickRecognizerRef recognizer, void *context){
+static void select_long_click_release_handler(ClickRecognizerRef recognizer, void *context){
   direction = (direction ^ 1) & 0x1; // XOR by 1
   send_cmd();
 }
 
-void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
 
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Fetching data.");
   send_cmd();
 }
 
-void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  window_stack_push((Window*)wind_stop_sel, true);
+static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+  //window_stack_push((Window*)wind_stop_sel, true);
+  window_stack_push((Window*)nb_selector, true);
 }
 
-void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   window_stack_push((Window*)wind_bus_sel, true);
 }
 
@@ -410,6 +386,7 @@ static void deinit(void) {
   window_destroy(window);
   number_window_destroy(wind_bus_sel);
   number_window_destroy(wind_stop_sel);
+  window_destroy(nb_selector);
 }
 
 int main(void) {
