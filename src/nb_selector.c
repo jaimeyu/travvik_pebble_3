@@ -25,7 +25,7 @@ void window_nb_selector_load(Window *window) {
 
 
   window_set_click_config_provider(window, 
-          nb_selector_config_provider);
+          (ClickConfigProvider)nb_selector_config_provider);
 
 }
 
@@ -33,13 +33,14 @@ void window_nb_selector_unload(Window *window) {
   text_layer_destroy(sel0);
 }
 static void select_single_click_handler(ClickRecognizerRef recognizer, void *context){
-  text_layer_set_text(sel0, "Switching Direction");
+  text_layer_set_text(sel0, "singlie");
 }
 static void select_up_click_handler(ClickRecognizerRef recognizer, void *context){
-  text_layer_set_text(sel0, "Switching Direction");
+  text_layer_set_text(sel0, "up");
+  window_stack_pop(true);
 }
 static void select_down_click_handler(ClickRecognizerRef recognizer, void *context){
-  text_layer_set_text(sel0, "Switching Direction");
+  text_layer_set_text(sel0, "down");
 }
 
 static void nb_selector_config_provider(Window *window) {
