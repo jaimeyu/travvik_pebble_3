@@ -4,11 +4,11 @@ function error_fetching(route, station, direction){
   //route_destination = "(╯°□°）╯︵ ┻━┻";
   route_destination = "(J*_*)J^|_|";
   stop_name = "Sry. No data.";
- 
+
   Pebble.sendAppMessage({
-    "KEY_ROUTE" : parseInt(route),    
-    "KEY_STOP_NUM" : parseInt(station),   
-    "KEY_ETA" : parseInt(stop_eta),  
+    "KEY_ROUTE" : parseInt(route),
+    "KEY_STOP_NUM" : parseInt(station),
+    "KEY_ETA" : parseInt(stop_eta),
     "KEY_DST" : route_destination.substring(0,24),
     "KEY_STATION_STR" : stop_name.substring(0,24),
     "KEY_DIRECTION" : parseInt(direction)
@@ -48,16 +48,16 @@ function parseTravvikData(response, route, station, direction){
   console.log(("Arrival of " + route + " from " + stop_name + "to " + route_destination + " in " + stop_eta + " mins."));
 
   Pebble.sendAppMessage({
-    "KEY_ROUTE" : parseInt(route),    
-    "KEY_STOP_NUM" : parseInt(station),   
-    "KEY_ETA" : parseInt(stop_eta),  
+    "KEY_ROUTE" : parseInt(route),
+    "KEY_STOP_NUM" : parseInt(station),
+    "KEY_ETA" : parseInt(stop_eta),
     "KEY_DST" : route_destination.substring(0,24),
     "KEY_STATION_STR" : stop_name.substring(0,24),
     "KEY_DIRECTION" : parseInt(direction)
   });
 
   // No error detector, save the values.
-  console.log("Saving data:" + station + " " + route + " " + direction);  
+  console.log("Saving data:" + station + " " + route + " " + direction);
   localStorage.setItem("last_station", station);
   localStorage.setItem("last_route", route);
   localStorage.setItem("last_direction", direction);
@@ -102,18 +102,18 @@ Pebble.addEventListener("ready",
     function(e) {
       console.log("connect!" + e.ready);
       console.log(e.type);
-      
+
       // Boot up, fetch old data, send it down!
-      last_station = localStorage.getItem("last_station");
-      last_route =   localStorage.getItem("last_route");
+      last_station =   localStorage.getItem("last_station");
+      last_route =     localStorage.getItem("last_route");
       last_direction = localStorage.getItem("last_direction");
       if ( last_station === null || last_route === null || last_direction === null) {
         console.log("Can't find old data to sync");
-        last_station = 97;
-        last_route = 3000;
+        last_station = 3011;
+        last_route = 97;
         last_direction = 0;
       }
-      console.log("Old data:" + last_station + " " + last_route + " " + last_direction);  
+      console.log("Old data:" + last_station + " " + last_route + " " + last_direction);
       fetch_next_bus(last_route, last_station, last_direction);
 
     });
@@ -122,7 +122,7 @@ Pebble.addEventListener("appmessage",
     function(e) {
       console.log(e.type);
       console.log("rcvd msg frm pbl");
-      fetch_next_bus( e.payload.KEY_ROUTE, 
+      fetch_next_bus( e.payload.KEY_ROUTE,
                       e.payload.KEY_STOP_NUM,
                       e.payload.KEY_DIRECTION);
     });
