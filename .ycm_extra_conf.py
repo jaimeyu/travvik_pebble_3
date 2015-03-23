@@ -40,7 +40,7 @@ flags = [
 # include third party libraries
 #'/usr/include/python2.7',
 '-isystem',
-'/home/jaime/pebble-dev/PebbleSDK-2.7/Pebble/include'
+'/home/jaimeyu/pebble-dev/PebbleSDK-3.0-dp2/Pebble/aplite/include'
 ]
 
 # youcompleteme is calling this function to get flags
