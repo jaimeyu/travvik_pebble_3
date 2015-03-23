@@ -33,6 +33,7 @@ static uint8_t sync_buffer[128];
 static uint8_t direction = 0;
 int route = 0;
 int stop = 0;
+int gps = 0;
 static int32_t eta = 0;
 static int32_t refresh_count = 3;
 static uint8_t busy = 0;
@@ -44,6 +45,7 @@ enum TRIP_KEYS {
   KEY_DST = 3, // TUPLE_CSTRING
   KEY_STATION_STR = 4,
   KEY_DIRECTION = 5,
+  KEY_GPS= 6,
 };
 
 #define STR_FETCHING "Fetching..."
@@ -125,6 +127,14 @@ sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tu
     case KEY_DIRECTION:
       mask_rcv.direction = 1;
       break;
+    case KEY_GPS:
+      gps = new_tuple->value->int16;
+      if (gps){
+          text_layer_set_text(layer_gps_str, "GPS Tracking");
+      } else {
+          text_layer_set_text(layer_gps_str, "NO GPS");
+      }
+      break;
     case KEY_STATION_STR:
       //APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: station name:");
       text_layer_set_text(layer_station_str, new_tuple->value->cstring);
@@ -182,6 +192,7 @@ void send_cmd(void) {
   Tuplet dst =      TupletCString(KEY_DST, STR_FETCHING);
   Tuplet station_str = TupletCString(KEY_DST, STR_FETCHING);
   Tuplet dir = TupletInteger(KEY_DIRECTION, direction); 
+  Tuplet tgps= TupletInteger(KEY_GPS, 0); 
 
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
@@ -196,6 +207,7 @@ void send_cmd(void) {
   dict_write_tuplet(iter, &dst);
   dict_write_tuplet(iter, &station_str);
   dict_write_tuplet(iter, &dir);
+  dict_write_tuplet(iter, &tgps);
   dict_write_end(iter);
 
   app_message_outbox_send();
@@ -277,6 +289,7 @@ Station name
     TupletCString(KEY_DST, "  bootup              "),
     TupletCString(KEY_STATION_STR, " none            "),
     TupletInteger(KEY_DIRECTION, 0),
+    TupletInteger(KEY_GPS, 0),
   };
 
     int inbound_size = app_message_inbox_size_maximum();

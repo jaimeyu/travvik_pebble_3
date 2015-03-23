@@ -11,14 +11,15 @@ function error_fetching(route, station, direction, reason){
     "KEY_ETA" : parseInt(stop_eta),
     "KEY_DST" : route_destination.substring(0,24),
     "KEY_STATION_STR" : stop_name.substring(0,24),
-    "KEY_DIRECTION" : parseInt(direction)
+    "KEY_DIRECTION" : parseInt(direction),
+    "KEY_GPS" : parseInt(0)
   });
 
 
 }
 
 function parseTravvikData(response, route, station, direction){
-  var stop_eta = null, route_destination = null, stop_name = null;
+  var stop_eta = null, route_destination = null, stop_name = null, gps = null;
 
   //console.log("Parsing downloaded data for:" + JSON.stringify(direction));
   /*{"station":"TUNNEY PASTURE","route":"97","stop_eta":"14","destination0":"Airport \/ A\u00e9roport","arrival1":"2","destination1":"Bayshore"}*/
@@ -27,6 +28,11 @@ function parseTravvikData(response, route, station, direction){
     if (response.route === ""){
       error_fetching(route, station, direction,"Route missing");
       return;
+    }else if (direction === 0 || direction === "0" || response.arrival1 === ""){
+      //console.log("Grabbing from direction 0");
+      stop_eta = response.arrival0;
+      route_destination = response.destination0;
+      direction = 0;
     }
     else if (direction === 0 || direction === "0" || response.arrival1 === ""){
       //console.log("Grabbing from direction 0");
@@ -40,12 +46,21 @@ function parseTravvikData(response, route, station, direction){
       route_destination = response.destination1;
       direction = 1;
     }
+
+    if (response.latitude === ""){
+      gps = 1;
+    }
+    else {
+      gps = 0;
+    }
   }
   catch (e) {
     console.log("Something went wrong trying to parse data:" + JSON.stringify(e));
   }
 
-  console.log(("Arrival of " + route + " from " + stop_name + "to " + route_destination + " in " + stop_eta + " mins."));
+  console.log(("Arrival of " + route + " from " + stop_name + "to " +
+                 route_destination + " in " + stop_eta + " mins with"
+                    + " GPS enabled?" + gps));
 
   Pebble.sendAppMessage({
     "KEY_ROUTE" : parseInt(route),
@@ -53,7 +68,8 @@ function parseTravvikData(response, route, station, direction){
     "KEY_ETA" : parseInt(stop_eta),
     "KEY_DST" : route_destination.substring(0,12),
     "KEY_STATION_STR" : stop_name.substring(0,12),
-    "KEY_DIRECTION" : parseInt(direction)
+    "KEY_DIRECTION" : parseInt(direction),
+    "KEY_GPS" : parseInt(gps)
   },
 function(e) {
     console.log('Successfully delivered message with transactionId='
