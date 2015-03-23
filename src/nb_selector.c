@@ -21,7 +21,7 @@ extern int stop;
 void setNumberDefault(TextLayer *curLayer){
     text_layer_set_text_color(curLayer, GColorWhite);
     text_layer_set_background_color(curLayer, GColorBlack);
-    text_layer_set_font(curLayer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
+    text_layer_set_font(curLayer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
     text_layer_set_text_alignment(curLayer, GTextAlignmentLeft);
 }
 
@@ -35,12 +35,12 @@ void window_nb_selector_load(Window *window) {
     for (i = 0; i < 4; i++) {
         inb[i] = 0;
 
-        underscore[i] = text_layer_create(GRect(0 + (i*40), 65 , 30, 40));
+        underscore[i] = text_layer_create(GRect(0 + (i*31), 65 , 30, 40));
         setNumberDefault(underscore[i]);
         text_layer_set_text(underscore[i], "");
         layer_add_child(window_layer, text_layer_get_layer(underscore[i]));
 
-        number[i] = text_layer_create(GRect(0 + (i*40), 50 , 50, 40));
+        number[i] = text_layer_create(GRect(0 + (i*31), 50 , 50, 40));
         setNumberDefault(number[i]);
         text_layer_set_text(number[i], "0");
         layer_add_child(window_layer, text_layer_get_layer(number[i]));
@@ -162,6 +162,7 @@ char* digit2str(int digit){
 
 static void select_up_click_handler(ClickRecognizerRef recognizer, void *context){
     inb[curCount] = (inb[curCount] + 1) % 10;
+    setNumberDefault(number[curCount]);
     text_layer_set_text(number[curCount], digit2str(inb[curCount]));
 }
 static void select_down_click_handler(ClickRecognizerRef recognizer, void *context){
@@ -169,6 +170,8 @@ static void select_down_click_handler(ClickRecognizerRef recognizer, void *conte
     if (inb[curCount] < 0){
         inb[curCount] = 9;
     }
+
+    setNumberDefault(number[curCount]);
     text_layer_set_text(number[curCount], digit2str(inb[curCount]));
 
 }
