@@ -1,7 +1,6 @@
 #include "pebble.h"
 #include "nb_selector.h"
-#include "util.h"
-
+#include "travvik.h"
 // methods
 
 static void select_single_click_handler(ClickRecognizerRef recognizer, void *context);
@@ -9,12 +8,15 @@ static void select_up_click_handler(ClickRecognizerRef recognizer, void *context
 static void select_down_click_handler(ClickRecognizerRef recognizer, void *context);
 static void select_down_click_handler(ClickRecognizerRef recognizer, void *context);
 static void nb_selector_config_provider(Window *window);
+char* digit2str(int digit);
 
 static TextLayer *number[4];
 static int inb[4];
-//static int final_number;
+static int *final_number;
 static TextLayer *underscore[4];
 static uint8_t curCount = 0;
+
+extern int stop;
 
 void setNumberDefault(TextLayer *curLayer){
     text_layer_set_text_color(curLayer, GColorWhite);
@@ -28,6 +30,8 @@ void window_nb_selector_load(Window *window) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Created nb selector.");
     Layer *window_layer = window_get_root_layer(window);
 
+    final_number = (int*) window_get_user_data(window);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "user data:%d", *final_number);
     for (i = 0; i < 4; i++) {
         inb[i] = 0;
 
@@ -43,6 +47,24 @@ void window_nb_selector_load(Window *window) {
 
     }
     text_layer_set_text(underscore[0], "_");
+
+    int c = *final_number / 1000 % 10;
+    text_layer_set_text(number[0], digit2str(c));
+    
+    c = *final_number / 100 % 10;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "user data:%d", c);
+    text_layer_set_text(number[1], digit2str(c));
+    
+    c = *final_number / 10 % 10;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "user data:%d", c);
+    text_layer_set_text(number[2], digit2str(c));
+
+    c = *final_number % 10;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "user data:%d", c);
+    text_layer_set_text(number[3], digit2str(c));
+
+
+
 
     window_set_click_config_provider(window, 
             (ClickConfigProvider)nb_selector_config_provider);
@@ -61,6 +83,21 @@ static void select_single_click_handler(ClickRecognizerRef recognizer, void *con
     count = curCount - 1;
 
     if (curCount > 3){
+
+        //convert number selector to number
+        *final_number = 
+            (inb[0] * 1000) +
+            (inb[1] * 100) +
+            (inb[2] * 10) + 
+            inb[3];
+        /*
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "inb:%d", *final_number);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "inb0:%d", inb[0]);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "inb1:%d",  inb[1]);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "inb2:%d",  inb[2]);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "inb3:%d",  inb[3]);
+        */
+        send_cmd();
         window_stack_pop(true);
     }
     else{

@@ -1,6 +1,7 @@
 #include "pebble.h"
 #include "nb_selector.h"
 #include "util.h"
+#include "travvik.h"
 
 //#define DEBUG 
 #undef DEBUG 
@@ -12,6 +13,7 @@
 
 static Window *window;
 static Window *nb_selector;
+static Window *nb_selector_stop;
 static NumberWindow *wind_bus_sel;
 static NumberWindow *wind_stop_sel;
 
@@ -28,12 +30,12 @@ static GBitmap *icon_bitmap = NULL;
 static AppSync sync;
 static uint8_t sync_buffer[128];
 
-static volatile uint8_t direction = 0;
-static volatile uint32_t route = 0;
-static volatile uint32_t stop = 0;
-static volatile int32_t eta = 0;
-static volatile int32_t refresh_count = 3;
-static volatile uint8_t busy = 0;
+static uint8_t direction = 0;
+int route = 0;
+int stop = 0;
+static int32_t eta = 0;
+static int32_t refresh_count = 3;
+static uint8_t busy = 0;
 
 enum TRIP_KEYS {
   KEY_ROUTE = 0,     // TUPLE_INT bus #
@@ -46,7 +48,6 @@ enum TRIP_KEYS {
 
 #define STR_FETCHING "Fetching..."
 
-static void send_cmd(void);
 
 
 static uint8_t error_flag = 0;
@@ -161,7 +162,7 @@ void decrement_eta_handler(void *data){
   app_timer_register(TIMER, decrement_eta_handler, NULL);
 }
 
-static void send_cmd(void) {
+void send_cmd(void) {
   // Don't send if we're busy sending a request.
   if (busy != 0){
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Still handling old req");
@@ -172,8 +173,8 @@ static void send_cmd(void) {
 
   //busy = 1;
 
-  route = number_window_get_value(wind_bus_sel);
-  stop = number_window_get_value(wind_stop_sel);
+  // route = number_window_get_value(wind_bus_sel);
+  // stop = number_window_get_value(wind_stop_sel);
 
   Tuplet value =    TupletInteger(KEY_ROUTE, route);
   Tuplet stopnb =   TupletInteger(KEY_STOP_NUM, stop);
@@ -317,18 +318,16 @@ static void select_long_click_release_handler(ClickRecognizerRef recognizer, voi
 }
 
 static void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Fetching data.");
   send_cmd();
 }
 
 static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  //window_stack_push((Window*)wind_stop_sel, true);
-  window_stack_push((Window*)nb_selector, true);
+  window_stack_push(nb_selector_stop, true);
 }
 
 static void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  window_stack_push((Window*)wind_bus_sel, true);
+  window_stack_push(nb_selector, true);
 }
 
 void pop_window(NumberWindow *number_window, void *context) {
@@ -363,6 +362,20 @@ static void init(void) {
       .unload = window_nb_selector_unload
       });
 
+  nb_selector_stop = window_create();
+  window_set_background_color(nb_selector_stop, GColorBlack);
+  window_set_fullscreen(nb_selector_stop, false);
+  window_set_window_handlers(nb_selector_stop, (WindowHandlers) {
+      .load = window_nb_selector_load,
+      .unload = window_nb_selector_unload
+      });
+
+
+  route = 97;
+  stop = 3050;
+  window_set_user_data(nb_selector, (void*)&route);
+  window_set_user_data(nb_selector_stop, (void*)&stop);
+
   wind_bus_sel = number_window_create("Bus #",  (NumberWindowCallbacks) {.selected = pop_window}, NULL);
   number_window_set_step_size(wind_bus_sel, 1);
   number_window_set_min(wind_bus_sel, 1);
@@ -385,6 +398,7 @@ static void deinit(void) {
   number_window_destroy(wind_bus_sel);
   number_window_destroy(wind_stop_sel);
   window_destroy(nb_selector);
+  window_destroy(nb_selector_stop);
 }
 
 int main(void) {
