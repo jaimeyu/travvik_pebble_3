@@ -50,19 +50,22 @@ void window_nb_selector_load(Window *window) {
 
     int c = *final_number / 1000 % 10;
     text_layer_set_text(number[0], digit2str(c));
+    inb[0] = c;
     
     c = *final_number / 100 % 10;
     APP_LOG(APP_LOG_LEVEL_DEBUG, "user data:%d", c);
     text_layer_set_text(number[1], digit2str(c));
+    inb[1] = c;
     
     c = *final_number / 10 % 10;
     APP_LOG(APP_LOG_LEVEL_DEBUG, "user data:%d", c);
     text_layer_set_text(number[2], digit2str(c));
+    inb[2] = c;
 
     c = *final_number % 10;
     APP_LOG(APP_LOG_LEVEL_DEBUG, "user data:%d", c);
     text_layer_set_text(number[3], digit2str(c));
-
+    inb[3] = c;
 
 
 
