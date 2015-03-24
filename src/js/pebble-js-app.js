@@ -1,9 +1,9 @@
 function error_fetching(route, station, direction, reason){
   console.log("Error in response:" + reason);
-  stop_eta = 3;
+  var stop_eta = 3;
   //route_destination = "(╯°□°）╯︵ ┻━┻";
-  route_destination = "No data";
-  stop_name = "Retrying in 3 mins";
+  var route_destination = "No data";
+  var stop_name = "Retrying in 3 mins";
 
   Pebble.sendAppMessage({
     "KEY_ROUTE" : parseInt(route),
@@ -20,6 +20,7 @@ function error_fetching(route, station, direction, reason){
 
 function parseTravvikData(response, route, station, direction){
   var stop_eta = null, route_destination = null, stop_name = null, gps = null;
+  var gps = 0;
 
   //console.log("Parsing downloaded data for:" + JSON.stringify(direction));
   /*{"station":"TUNNEY PASTURE","route":"97","stop_eta":"14","destination0":"Airport \/ A\u00e9roport","arrival1":"2","destination1":"Bayshore"}*/
@@ -72,13 +73,10 @@ function parseTravvikData(response, route, station, direction){
     "KEY_GPS" : parseInt(gps)
   },
 function(e) {
-    console.log('Successfully delivered message with transactionId='
-      + e.data.transactionId);
+    console.log('Successfully delivered message with transactionId=' + e.data.transactionId);
   },
   function(e) {
-    console.log('Unable to deliver message with transactionId='
-      + e.data.transactionId
-      + ' Error is: ' + e.error.message);
+    console.log('Unable to deliver message with transactionId=' + e.data.transactionId + ' Error is: ' + e.error.message);
   });
 
   // No error detector, save the values.
@@ -129,9 +127,9 @@ Pebble.addEventListener("ready",
       console.log(e.type);
 
       // Boot up, fetch old data, send it down!
-      last_station =   localStorage.getItem("last_station");
-      last_route =     localStorage.getItem("last_route");
-      last_direction = localStorage.getItem("last_direction");
+      var last_station =   localStorage.getItem("last_station");
+      var last_route =     localStorage.getItem("last_route");
+      var last_direction = localStorage.getItem("last_direction");
       if ( last_station === null || last_route === null || last_direction === null
           || last_station === -1 || last_route === -1 || last_direction === -1) {
         console.log("Can't find old data to sync");
