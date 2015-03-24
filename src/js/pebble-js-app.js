@@ -18,6 +18,18 @@ function error_fetching(route, station, direction, reason){
 
 }
 
+function isGps(str){
+    console.log("GPS?" + str);
+    var gps = 0;
+    if (str === ""){
+      gps = 0;
+    }
+    else {
+      gps = 1;
+    }
+    return gps;
+}
+
 function parseTravvikData(response, route, station, direction){
   var stop_eta = null, route_destination = null, stop_name = null, gps = null;
   var gps = 0;
@@ -30,29 +42,18 @@ function parseTravvikData(response, route, station, direction){
       error_fetching(route, station, direction,"Route missing");
       return;
     }else if (direction === 0 || direction === "0" || response.arrival1 === ""){
-      //console.log("Grabbing from direction 0");
+      console.log("Grabbing from direction 0");
       stop_eta = response.arrival0;
       route_destination = response.destination0;
-      direction = 0;
-    }
-    else if (direction === 0 || direction === "0" || response.arrival1 === ""){
-      //console.log("Grabbing from direction 0");
-      stop_eta = response.arrival0;
-      route_destination = response.destination0;
+      gps = isGps(response.latitude0);
       direction = 0;
     }
     else {
       console.log("Grabbing from direction 1");
       stop_eta = response.arrival1;
       route_destination = response.destination1;
+      gps = isGps(response.latitude1);
       direction = 1;
-    }
-
-    if (response.latitude === ""){
-      gps = 1;
-    }
-    else {
-      gps = 0;
     }
   }
   catch (e) {
