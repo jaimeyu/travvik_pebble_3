@@ -125,14 +125,15 @@ req.send();
 
 Pebble.addEventListener("ready",
     function(e) {
-      console.log("connect!" + e.ready);
+      console.log("connected" + e.ready);
       console.log(e.type);
 
       // Boot up, fetch old data, send it down!
       last_station =   localStorage.getItem("last_station");
       last_route =     localStorage.getItem("last_route");
       last_direction = localStorage.getItem("last_direction");
-      if ( last_station === null || last_route === null || last_direction === null) {
+      if ( last_station === null || last_route === null || last_direction === null
+          || last_station === -1 || last_route === -1 || last_direction === -1) {
         console.log("Can't find old data to sync");
         last_station = 3011;
         last_route = 97;

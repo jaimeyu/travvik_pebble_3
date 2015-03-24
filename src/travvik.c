@@ -100,6 +100,7 @@ sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tu
   switch (key) {
     case KEY_ROUTE:
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: BUS_NB:%d", (int)new_tuple->value->int32);
+      route = new_tuple->value->int32;
       itoa((int)new_tuple->value->int32,nb,10);
       text_layer_set_text(layer_route, nb);
       number_window_set_value(wind_bus_sel, (int)new_tuple->value->int32);
@@ -107,6 +108,7 @@ sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tu
       break;
     case KEY_STOP_NUM:
       APP_LOG(APP_LOG_LEVEL_DEBUG, "RCVD: stop_NB:%d", (int)new_tuple->value->int32);
+      stop = new_tuple->value->int32;
       itoa((int)new_tuple->value->int32,sb,10);
       text_layer_set_text(layer_station, sb);
       number_window_set_value(wind_stop_sel, (int)new_tuple->value->int32);
